@@ -238,9 +238,11 @@
 
   .add-row { display: flex; gap: 6px; margin-bottom: 10px; }
 
-  #nameInput {
+  #nameInput, #hostTokenInput {
     flex: 1;
     min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
     background: rgba(255, 255, 255, 0.6);
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -249,9 +251,10 @@
     font-size: 14px;
     font-family: var(--font-body);
   }
-  :root[data-theme="dark"] #nameInput { background: rgba(255, 255, 255, 0.08); }
-  @media (prefers-color-scheme: dark) { #nameInput { background: rgba(255, 255, 255, 0.08); } }
-  #nameInput:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  :root[data-theme="dark"] #nameInput, :root[data-theme="dark"] #hostTokenInput { background: rgba(255, 255, 255, 0.08); }
+  @media (prefers-color-scheme: dark) { #nameInput, #hostTokenInput { background: rgba(255, 255, 255, 0.08); } }
+  #nameInput:focus-visible, #hostTokenInput:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #hostTokenInput { margin-bottom: 6px; }
 
   .btn-add {
     border: 1px solid var(--line-strong);
@@ -582,6 +585,12 @@
         </div>
       </section>
 
+      <section class="panel-block">
+        <h2>공유 모드 (호스트 전용)</h2>
+        <input type="password" id="hostTokenInput" placeholder="GitHub 토큰 붙여넣기 (선택)" autocomplete="off" />
+        <p class="hint" id="hostTokenStatus">토큰이 없으면 이 화면은 보기 전용으로 동작해요.</p>
+      </section>
+
       <p class="warning" id="warningMsg" role="alert"></p>
 
       <div class="action-row">
@@ -642,6 +651,8 @@
   var teamMinus = document.getElementById("teamMinus");
   var teamPlus = document.getElementById("teamPlus");
   var speedToggle = document.getElementById("speedToggle");
+  var hostTokenInput = document.getElementById("hostTokenInput");
+  var hostTokenStatus = document.getElementById("hostTokenStatus");
   var warningMsg = document.getElementById("warningMsg");
   var startBtn = document.getElementById("startBtn");
   var resetBtn = document.getElementById("resetBtn");
@@ -666,6 +677,92 @@
       b.classList.toggle("is-active", b === btn);
     });
   });
+
+  // ---------- Cross-device sharing (this repo's state.json as a tiny shared store) ----------
+  var REPO_OWNER = "whikebaintres";
+  var REPO_NAME = "team-draft";
+  var STATE_PATH = "state.json";
+  var hostToken = localStorage.getItem("teamDraftHostToken") || "";
+  var lastKnownRunId = null;
+  var pollInFlight = false;
+
+  hostTokenInput.value = hostToken;
+  updateHostTokenStatus(hostToken ? "토큰이 저장되어 있어요. 이 브라우저에서 뽑기를 시작하면 공유돼요." : "토큰이 없으면 이 화면은 보기 전용으로 동작해요.");
+
+  function updateHostTokenStatus(text) { hostTokenStatus.textContent = text; }
+
+  hostTokenInput.addEventListener("change", function () {
+    hostToken = hostTokenInput.value.trim();
+    if (hostToken) {
+      localStorage.setItem("teamDraftHostToken", hostToken);
+      updateHostTokenStatus("토큰이 저장되었어요. 이 브라우저에서 뽑기를 시작하면 공유돼요.");
+    } else {
+      localStorage.removeItem("teamDraftHostToken");
+      updateHostTokenStatus("토큰이 없으면 이 화면은 보기 전용으로 동작해요.");
+    }
+  });
+
+  function b64EncodeUnicode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  async function publishState(payload) {
+    if (!hostToken) return;
+    updateHostTokenStatus("공유하는 중…");
+    try {
+      var apiUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STATE_PATH;
+      var sha = null;
+      var getRes = await fetch(apiUrl, {
+        headers: { Authorization: "Bearer " + hostToken, Accept: "application/vnd.github+json" }
+      });
+      if (getRes.status === 200) {
+        var current = await getRes.json();
+        sha = current.sha;
+      }
+      var body = { message: "team draft: update state", content: b64EncodeUnicode(JSON.stringify(payload)) };
+      if (sha) body.sha = sha;
+      var putRes = await fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer " + hostToken,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+      if (putRes.ok) {
+        lastKnownRunId = payload.runId;
+        updateHostTokenStatus("공유 완료! 다른 기기에서도 곧 같은 결과가 보일 거예요.");
+      } else {
+        updateHostTokenStatus("공유 실패 (토큰 권한을 확인해주세요).");
+      }
+    } catch (e) {
+      updateHostTokenStatus("공유 실패 (네트워크 오류).");
+    }
+  }
+
+  async function pollState() {
+    if (pollInFlight || animRunning) return;
+    pollInFlight = true;
+    try {
+      var res = await fetch(STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
+      if (res.ok) {
+        var data = await res.json();
+        if (lastKnownRunId === null) {
+          lastKnownRunId = data.runId || "";
+        } else if (data.runId && data.runId !== lastKnownRunId) {
+          lastKnownRunId = data.runId;
+          replayFromRemote(data);
+        }
+      }
+    } catch (e) {
+      // ignore transient network errors
+    }
+    pollInFlight = false;
+  }
+
+  setInterval(pollState, 5000);
+  pollState();
 
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -1313,13 +1410,7 @@
     if (!confettiRunning) resizeConfettiCanvas();
   });
 
-  function startDraw() {
-    if (!validate()) return;
-    var order = shuffled(members).map(function (m, i) {
-      return { name: m.name, teamIndex: i % teamCount };
-    });
-    teamNames = shuffled(TEAM_NAME_POOL).slice(0, teamCount);
-
+  function runAnimation(order) {
     lockPanel(true);
     buildTeamCards(order);
     landedTotal = 0;
@@ -1340,6 +1431,30 @@
       animRunning = true;
       requestAnimationFrame(frame);
     }
+  }
+
+  function startDraw() {
+    if (!validate()) return;
+    var order = shuffled(members).map(function (m, i) {
+      return { name: m.name, teamIndex: i % teamCount };
+    });
+    teamNames = shuffled(TEAM_NAME_POOL).slice(0, teamCount);
+    runAnimation(order);
+    publishState({
+      runId: "r" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      startedAt: Date.now(),
+      teamCount: teamCount,
+      teamNames: teamNames,
+      order: order
+    });
+  }
+
+  function replayFromRemote(data) {
+    if (animRunning) return;
+    teamCount = data.teamCount;
+    teamNames = data.teamNames;
+    teamCountLabel.textContent = teamCount;
+    runAnimation(data.order);
   }
 
   function resetDraw() {
