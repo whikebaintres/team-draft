@@ -390,6 +390,32 @@
     padding: 15px 34px;
     border-radius: 999px;
   }
+  .mode-switch {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border-radius: 999px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  .mode-btn {
+    border: none;
+    background: transparent;
+    color: var(--ink-dim);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 7px 15px;
+    border-radius: 999px;
+    transition: background 0.15s, color 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+  .mode-btn:hover { color: var(--ink); }
+  .mode-btn.active {
+    background: var(--accent);
+    color: #ffffff;
+  }
+
   .host-panel {
     max-width: 360px;
     margin: 28px auto 0;
@@ -524,6 +550,33 @@
     padding: 46px 16px 20px;
     gap: 6px;
   }
+
+  .h2h-line {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 16px;
+    font-size: clamp(1.05rem, 3vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: -0.005em;
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .h2h-line.show { opacity: 1; transform: translateY(0); }
+
+  .h2h-commentary {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 6px;
+    font-size: 0.86rem;
+    font-weight: 500;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .h2h-commentary.show { opacity: 1; }
 
   .contender {
     display: flex;
@@ -766,6 +819,62 @@
     justify-content: center;
   }
 
+  .bgm-control {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 50;
+  }
+  .bgm-control[hidden] { display: none; }
+
+  .bgm-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    font-size: 1.1rem;
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .bgm-volume-wrap {
+    position: absolute;
+    top: 46px;
+    right: 8px;
+    height: 96px;
+    width: 34px;
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-soft);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .bgm-control:hover .bgm-volume-wrap,
+  .bgm-control:focus-within .bgm-volume-wrap {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #bgmVolume {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 4px;
+    height: 82px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.001ms !important;
@@ -773,6 +882,14 @@
     }
   }
 </style>
+
+<div id="ytPlayer" style="position:absolute; width:2px; height:2px; overflow:hidden; opacity:0; pointer-events:none;"></div>
+<div class="bgm-control" id="bgmControl" hidden>
+  <button id="bgmToggle" class="bgm-toggle" aria-label="배경음악 켜기/끄기">🔊</button>
+  <div class="bgm-volume-wrap">
+    <input type="range" id="bgmVolume" min="0" max="100" value="70" aria-label="배경음악 볼륨" />
+  </div>
+</div>
 
 <div class="wrap">
   <div class="hero">
@@ -796,6 +913,10 @@
       </div>
 
       <div class="panel">
+        <div class="mode-switch" role="radiogroup" aria-label="기록 모드">
+          <button type="button" class="mode-btn active" id="modeOfficialBtn" data-mode="official" role="radio" aria-checked="true"></button>
+          <button type="button" class="mode-btn" id="modeTestBtn" data-mode="test" role="radio" aria-checked="false">테스트</button>
+        </div>
         <h2>팀 구성</h2>
         <p class="hint">최소 2팀, 최대 8팀까지 구성할 수 있습니다. 팀 이름은 드래프트가 시작되면 공개됩니다.</p>
         <div class="stepper">
@@ -850,19 +971,26 @@
   var TEAM_COLOR_NAMES = ["딥 블루", "코스믹 오렌지", "세이지 그린", "라벤더", "스카이 블루", "코럴 핑크", "골드", "민트"];
   var TEAM_NAME_POOL = ["T1", "Gen.G", "Dplus KIA", "KT Rolster", "Hanwha Life Esports", "DRX", "Kwangdong Freecs", "Nongshim RedForce", "BRION", "FearX"];
   var DEFAULT_ROSTER = ["고재형", "지한규", "이예은", "편한슬", "이도현", "조이진", "유다현", "임준", "김탁우", "원종훈", "임별"];
-  var POSITION_NAMES = ["선봉", "차봉", "중견", "부장", "대장"];
+  var POSITION_NAMES = ["선봉전", "차봉전", "중견전", "부장전", "대장전"];
 
   // 관리자 점수 등록 페이지(admin.html)가 gacha-state.json에 누적시킨 실제 전적으로 채워짐.
   // 불러오기 전/실패 시에는 빈 객체 -> getStats()가 전원 0으로 폴백.
   var PLAYER_STATS = {};
+  var HEAD_TO_HEAD = {};
 
   var state = {
     roster: DEFAULT_ROSTER.slice(),
     teamCount: 2,
     teams: [],
     order: [],
-    pickIndex: 0
+    pickIndex: 0,
+    isTest: false
   };
+
+  function currentYearMonthLabel() {
+    var d = new Date();
+    return d.getFullYear() + "년 " + (d.getMonth() + 1) + "월";
+  }
 
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -895,6 +1023,7 @@
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (data) {
         if (data && data.playerStats) PLAYER_STATS = data.playerStats;
+        if (data && data.headToHead) HEAD_TO_HEAD = data.headToHead;
       })
       .catch(function () {});
   }
@@ -919,13 +1048,19 @@
         sha = meta.sha;
         try { current = JSON.parse(b64DecodeUnicode(meta.content)); } catch (e) {}
       }
+      var pairs = [];
+      for (var i = 0; i + 1 < state.order.length; i += 2) {
+        pairs.push([state.order[i], state.order[i + 1]]);
+      }
       current.latestDraft = {
         runId: "d" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
         createdAt: Date.now(),
+        yearMonth: currentYearMonthLabel(),
         scored: false,
         teams: state.teams.map(function (t) {
           return { name: t.name, color: t.color, colorName: t.colorName, members: t.members.slice() };
         }),
+        pairs: pairs,
         results: null
       };
       var body = { message: "gacha draft: publish latest draft", content: b64EncodeUnicode(JSON.stringify(current)) };
@@ -955,6 +1090,79 @@
     });
   }
 
+  // ---------- BGM (YouTube IFrame API) ----------
+  var BGM_VIDEO_ID = "V1gTYew5k4U";
+  var ytPlayerObj = null;
+  var ytReady = false;
+  var bgmWantsPlay = false;
+  var bgmMuted = localStorage.getItem("gachaBgmMuted") === "1";
+  var bgmVolume = parseInt(localStorage.getItem("gachaBgmVolume") || "70", 10);
+
+  window.onYouTubeIframeAPIReady = function () {
+    ytPlayerObj = new YT.Player("ytPlayer", {
+      videoId: BGM_VIDEO_ID,
+      playerVars: {
+        autoplay: 0,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        modestbranding: 1,
+        rel: 0,
+        loop: 1,
+        playlist: BGM_VIDEO_ID
+      },
+      events: {
+        onReady: function (e) {
+          ytReady = true;
+          e.target.setVolume(bgmVolume);
+          if (bgmMuted) e.target.mute();
+          if (bgmWantsPlay) e.target.playVideo();
+        }
+      }
+    });
+  };
+
+  (function loadYouTubeApi() {
+    var tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+  })();
+
+  function playBgm() {
+    bgmWantsPlay = true;
+    $("bgmControl").hidden = false;
+    if (ytReady && ytPlayerObj) ytPlayerObj.playVideo();
+  }
+
+  function stopBgm() {
+    bgmWantsPlay = false;
+    if (ytReady && ytPlayerObj) {
+      ytPlayerObj.pauseVideo();
+      ytPlayerObj.seekTo(0, true);
+    }
+  }
+
+  function updateBgmToggleIcon() {
+    $("bgmToggle").textContent = bgmMuted ? "🔇" : "🔊";
+  }
+  updateBgmToggleIcon();
+  $("bgmVolume").value = bgmVolume;
+
+  $("bgmToggle").addEventListener("click", function () {
+    bgmMuted = !bgmMuted;
+    localStorage.setItem("gachaBgmMuted", bgmMuted ? "1" : "0");
+    updateBgmToggleIcon();
+    if (ytReady && ytPlayerObj) {
+      if (bgmMuted) ytPlayerObj.mute(); else ytPlayerObj.unMute();
+    }
+  });
+
+  $("bgmVolume").addEventListener("input", function () {
+    bgmVolume = parseInt(this.value, 10);
+    localStorage.setItem("gachaBgmVolume", String(bgmVolume));
+    if (ytReady && ytPlayerObj) ytPlayerObj.setVolume(bgmVolume);
+  });
+
   function showScreen(name) {
     document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("active"); });
     $("screen-" + name).classList.add("active");
@@ -974,7 +1182,9 @@
       row.classList.add("done");
       $("statusLabel").textContent = "완료";
       $("heroTitle").textContent = "완성된 라인업.";
-      $("heroSub").textContent = "무작위였지만, 공정했습니다. 좋은 경기 되세요.";
+      $("heroSub").textContent = state.isTest
+        ? "테스트 모드로 진행되어 전적에 기록되지 않았습니다."
+        : "무작위였지만, 공정했습니다. 좋은 경기 되세요.";
     }
   }
 
@@ -1095,6 +1305,19 @@
     clampTeamCount(); validateStart();
   });
 
+  $("modeOfficialBtn").textContent = currentYearMonthLabel();
+
+  function setRecordMode(mode) {
+    state.isTest = (mode === "test");
+    $("modeOfficialBtn").classList.toggle("active", !state.isTest);
+    $("modeOfficialBtn").setAttribute("aria-checked", String(!state.isTest));
+    $("modeTestBtn").classList.toggle("active", state.isTest);
+    $("modeTestBtn").setAttribute("aria-checked", String(state.isTest));
+  }
+  $("modeOfficialBtn").addEventListener("click", function () { setRecordMode("official"); });
+  $("modeTestBtn").addEventListener("click", function () { setRecordMode("test"); });
+  setRecordMode("official");
+
   /* ---------------- Draft screen ---------------- */
 
   function buildTeams() {
@@ -1140,8 +1363,16 @@
     });
   }
 
-  function positionLabel(pairIndex) {
-    return pairIndex < POSITION_NAMES.length ? POSITION_NAMES[pairIndex] : (pairIndex + 1) + "번째 대결";
+  function positionLabel(pairIndex, totalPairs) {
+    var list;
+    if (totalPairs === 4) {
+      list = ["선봉전", "차봉전", "부장전", "대장전"];
+    } else if (totalPairs >= 5 || totalPairs <= 0) {
+      list = POSITION_NAMES;
+    } else {
+      list = POSITION_NAMES.slice(0, totalPairs - 1).concat("대장전");
+    }
+    return pairIndex < list.length ? list[pairIndex] : (pairIndex + 1) + "번째 대결";
   }
 
   var SILHOUETTE_SVG = '<svg viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">' +
@@ -1224,6 +1455,62 @@
     return { win: s.win, loss: s.loss, draw: s.draw, pom: s.pom, rate: rate };
   }
 
+  function getHeadToHead(nameX, nameY) {
+    var rec = HEAD_TO_HEAD[nameX + "|" + nameY] || HEAD_TO_HEAD[nameY + "|" + nameX];
+    if (!rec) return { win: 0, loss: 0, draw: 0, total: 0 };
+    var win, loss;
+    if (rec.a === nameX) { win = rec.aWin; loss = rec.bWin; }
+    else { win = rec.bWin; loss = rec.aWin; }
+    return { win: win, loss: loss, draw: rec.draw, total: win + loss + rec.draw };
+  }
+
+  function headToHeadLabel(leftName, rightName) {
+    var h2h = getHeadToHead(leftName, rightName);
+    if (h2h.total === 0) return "첫 맞대결";
+    if (h2h.win === h2h.loss) {
+      return "상대전적 " + h2h.win + "승 " + h2h.loss + "패 동률" + (h2h.draw ? " (" + h2h.draw + "무)" : "");
+    }
+    var leaderName = h2h.win > h2h.loss ? leftName : rightName;
+    var leaderWins = Math.max(h2h.win, h2h.loss);
+    var otherWins = Math.min(h2h.win, h2h.loss);
+    return leaderName + " " + leaderWins + "승 " + otherWins + "패로 우위" + (h2h.draw ? " (" + h2h.draw + "무)" : "");
+  }
+
+  var FIRST_MEETING_LINES = [
+    "설레는 첫 맞대결이네요.",
+    "좋은 승부가 기대됩니다.",
+    "첫 대결의 주인공은 과연 누가 될까요?",
+    "기록에 없는 만큼, 무엇이든 가능합니다."
+  ];
+  var CLOSE_MATCH_LINES = [
+    "이번에 앞서 나가는 것은 누구일까요?",
+    "한 끗 차이, 승부는 아직 모릅니다.",
+    "누가 먼저 균형을 깰지 지켜보시죠.",
+    "막상막하의 대결, 긴장감이 넘칩니다."
+  ];
+  var DOMINANT_LINES = [
+    "{trailing}님이 파죽지세를 달리고 있는 {leader}님을 저지할 수 있을까요?",
+    "{leader}님의 압도적인 상대전적, {trailing}님은 반격할 수 있을까요?",
+    "이대로 {leader}님의 독주가 계속될까요?",
+    "{trailing}님에게는 자존심을 되찾을 기회입니다."
+  ];
+
+  function pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function headToHeadCommentary(leftName, rightName) {
+    var h2h = getHeadToHead(leftName, rightName);
+    if (h2h.total === 0) return pickRandom(FIRST_MEETING_LINES);
+    var diff = Math.abs(h2h.win - h2h.loss);
+    if (diff <= 1) return pickRandom(CLOSE_MATCH_LINES);
+    var leaderName = h2h.win > h2h.loss ? leftName : rightName;
+    var trailingName = h2h.win > h2h.loss ? rightName : leftName;
+    return pickRandom(DOMINANT_LINES)
+      .replace(/\{leader\}/g, leaderName)
+      .replace(/\{trailing\}/g, trailingName);
+  }
+
   function fillContender(el, personName, team) {
     var refs = el._refs;
     refs.card.style.setProperty("--glow-color", team.color);
@@ -1264,10 +1551,16 @@
     vsEl.className = "vs-mark";
     vsEl.textContent = "VS";
     var rightEl = buildContenderEl("right");
+    var h2hEl = document.createElement("div");
+    h2hEl.className = "h2h-line";
+    var h2hCommentaryEl = document.createElement("div");
+    h2hCommentaryEl.className = "h2h-commentary";
 
     arena.appendChild(leftEl);
     arena.appendChild(vsEl);
     arena.appendChild(rightEl);
+    arena.appendChild(h2hEl);
+    arena.appendChild(h2hCommentaryEl);
     duelStage.appendChild(flash);
     duelStage.appendChild(label);
     duelStage.appendChild(arena);
@@ -1276,6 +1569,8 @@
     if (!hasRight) {
       rightEl.style.visibility = "hidden";
       vsEl.style.visibility = "hidden";
+      h2hEl.style.visibility = "hidden";
+      h2hCommentaryEl.style.visibility = "hidden";
     }
 
     var leftName = state.order[leftIdx];
@@ -1291,7 +1586,11 @@
 
     $("pickNow").textContent = hasRight ? rightIdx + 1 : leftIdx + 1;
 
-    var k = reduceMotion ? 0.1 : 1;
+    var k = reduceMotion ? 0.08 : 1;
+    var HOLD_SOLO = 3000 * k;   // 첫 카드만 보여주는 시간
+    var REVEAL_GAP = 900 * k;   // 상대 카드 등장 후 VS/상대전적 공개까지 텀
+    var HOLD_REVEAL = 5000 * k; // 상대전적까지 공개된 뒤 대기 시간
+    var EXIT_GAP = reduceMotion ? 80 : 340;
 
     setTimeout(function () {
       leftEl.classList.add("show");
@@ -1299,26 +1598,31 @@
       renderRails(leftIdx % state.teamCount);
     }, 60);
 
+    var rightAppearAt = 60 + HOLD_SOLO;
+    var revealAt = rightAppearAt + REVEAL_GAP;
+
     if (hasRight) {
       setTimeout(function () {
         rightEl.classList.add("show");
         rightTeam.members.push(rightName);
         renderRails(rightIdx % state.teamCount);
-      }, 650 * k);
+      }, rightAppearAt);
 
       setTimeout(function () {
         vsEl.style.setProperty("--left-color", leftTeam.color);
         vsEl.style.setProperty("--right-color", rightTeam.color);
         vsEl.classList.add("show");
         flash.classList.add("show");
-        label.textContent = positionLabel(pairIndex);
+        label.textContent = positionLabel(pairIndex, state.totalPairs);
         label.classList.add("show");
-      }, 1150 * k);
+        h2hEl.textContent = headToHeadLabel(leftName, rightName);
+        h2hEl.classList.add("show");
+        h2hCommentaryEl.textContent = headToHeadCommentary(leftName, rightName);
+        h2hCommentaryEl.classList.add("show");
+      }, revealAt);
     }
 
-    var holdTotal = hasRight
-      ? (1150 * k + 5000 * (reduceMotion ? 0.2 : 1))
-      : (900 * k + (reduceMotion ? 300 : 1400));
+    var holdTotal = hasRight ? (revealAt + HOLD_REVEAL) : (60 + (reduceMotion ? 300 : 1800));
 
     setTimeout(function () {
       duelStage.classList.add("fade-out");
@@ -1327,16 +1631,18 @@
     setTimeout(function () {
       state.pickIndex += hasRight ? 2 : 1;
       showNextDuel();
-    }, holdTotal + (reduceMotion ? 80 : 340));
+    }, holdTotal + EXIT_GAP);
   }
 
   function startDraft() {
     buildTeams();
     state.order = shuffle(state.roster);
     state.pickIndex = 0;
+    state.totalPairs = Math.ceil(state.order.length / 2);
     $("pickTotal").textContent = state.order.length;
     renderRails(-1);
     showScreen("draft");
+    playBgm();
     showNextDuel();
   }
 
@@ -1361,13 +1667,20 @@
       grid.appendChild(card);
     });
     showScreen("result");
-    publishLatestDraft();
+    if (state.isTest) {
+      updateHostStatus("테스트 모드라 기록되지 않았어요.");
+    } else {
+      publishLatestDraft();
+    }
   }
 
   $("startBtn").addEventListener("click", startDraft);
   $("restartBtn").addEventListener("click", function () {
     showScreen("setup");
     validateStart();
+    stopBgm();
+    $("bgmControl").hidden = true;
+    setRecordMode("official");
   });
 
   var hostTokenInput = $("hostTokenInput");

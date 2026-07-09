@@ -150,6 +150,16 @@
   .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-dim); }
   .empty-state p { margin: 0 0 4px; }
 
+  .draft-meta {
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 12px;
+  }
+
   .team-block-head {
     display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
   }
@@ -313,7 +323,8 @@
   }
 
   function renderSummary(draft) {
-    var html = '<div class="panel result-summary">';
+    var html = draft.yearMonth ? '<p class="draft-meta">' + escapeHtml(draft.yearMonth) + ' 드래프트</p>' : "";
+    html += '<div class="panel result-summary">';
     draft.teams.forEach(function (team) {
       html += '<div class="team-block-head" style="--team-color:' + team.color + '"><span class="dot"></span><span class="name">' + escapeHtml(team.name) + '</span></div>';
       team.members.forEach(function (m) {
@@ -334,7 +345,7 @@
 
   function renderForm(draft) {
     var prevResults = (reScoring && draft.results) || {};
-    var html = "";
+    var html = draft.yearMonth ? '<p class="draft-meta">' + escapeHtml(draft.yearMonth) + ' 드래프트</p>' : "";
     draft.teams.forEach(function (team) {
       html += '<div class="panel"><div class="team-block-head" style="--team-color:' + team.color + '"><span class="dot"></span><span class="name">' + escapeHtml(team.name) + '</span></div>';
       team.members.forEach(function (m) {
@@ -394,9 +405,36 @@
     });
     if (res.status !== 200) return null;
     var meta = await res.json();
-    var data = { playerStats: {}, latestDraft: null };
+    var data = { playerStats: {}, headToHead: {}, latestDraft: null };
     try { data = JSON.parse(b64DecodeUnicode(meta.content)); } catch (e) {}
+    if (!data.headToHead) data.headToHead = {};
     return { data: data, sha: meta.sha, apiUrl: apiUrl };
+  }
+
+  // pairs: [[nameX, nameY], ...], resultsMap: { name: {outcome, pom} }, sign: +1 apply / -1 reverse
+  function applyHeadToHeadDelta(pairs, resultsMap, sign, headToHead) {
+    if (!pairs || !pairs.length) return;
+    pairs.forEach(function (pair) {
+      var nameX = pair[0], nameY = pair[1];
+      var rx = resultsMap[nameX], ry = resultsMap[nameY];
+      if (!rx || !ry || !rx.outcome || !ry.outcome) return;
+      var key = nameX + "|" + nameY;
+      var altKey = nameY + "|" + nameX;
+      var rec = headToHead[key] || headToHead[altKey];
+      if (!rec) {
+        rec = { a: nameX, b: nameY, aWin: 0, bWin: 0, draw: 0 };
+        headToHead[key] = rec;
+      }
+      var aIsX = (rec.a === nameX);
+      if (rx.outcome === "draw" && ry.outcome === "draw") {
+        rec.draw = Math.max(0, rec.draw + sign);
+      } else if (rx.outcome === "win" && ry.outcome === "loss") {
+        if (aIsX) rec.aWin = Math.max(0, rec.aWin + sign); else rec.bWin = Math.max(0, rec.bWin + sign);
+      } else if (rx.outcome === "loss" && ry.outcome === "win") {
+        if (aIsX) rec.bWin = Math.max(0, rec.bWin + sign); else rec.aWin = Math.max(0, rec.aWin + sign);
+      }
+      // 그 외 조합(둘 다 승/패, 한쪽만 입력 등)은 상대전적이 애매해지므로 건너뜀
+    });
   }
 
   async function submitScores() {
@@ -412,6 +450,7 @@
       }
       var draft = fresh.data.latestDraft;
       var playerStats = fresh.data.playerStats || {};
+      var headToHead = fresh.data.headToHead || {};
 
       if (draft.scored && draft.results) {
         Object.keys(draft.results).forEach(function (name) {
@@ -423,6 +462,7 @@
           else if (r.outcome === "draw") s.draw = Math.max(0, s.draw - 1);
           if (r.pom) s.pom = Math.max(0, s.pom - 1);
         });
+        applyHeadToHeadDelta(draft.pairs, draft.results, -1, headToHead);
       }
 
       var newResults = {};
@@ -447,9 +487,12 @@
         else newResults[pomValue].pom = true;
       }
 
+      applyHeadToHeadDelta(draft.pairs, newResults, 1, headToHead);
+
       draft.scored = true;
       draft.results = newResults;
       fresh.data.playerStats = playerStats;
+      fresh.data.headToHead = headToHead;
       fresh.data.latestDraft = draft;
 
       var body = { message: "gacha admin: register scores", content: b64EncodeUnicode(JSON.stringify(fresh.data)), sha: fresh.sha };
