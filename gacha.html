@@ -1090,8 +1090,31 @@
     });
   }
 
+  // ---------- SFX (카드 확정 / 상대전적 공개 효과음) ----------
+  var cardConfirmSfx = new Audio("FFXIV_Confirm.mp3");
+  cardConfirmSfx.preload = "auto";
+  cardConfirmSfx.volume = 0.5;
+
+  function playCardConfirmSfx() {
+    try {
+      cardConfirmSfx.currentTime = 0;
+      cardConfirmSfx.play().catch(function () {});
+    } catch (e) {}
+  }
+
+  var h2hRevealSfx = new Audio("charge.mp3");
+  h2hRevealSfx.preload = "auto";
+  h2hRevealSfx.volume = 0.5;
+
+  function playH2hRevealSfx() {
+    try {
+      h2hRevealSfx.currentTime = 0;
+      h2hRevealSfx.play().catch(function () {});
+    } catch (e) {}
+  }
+
   // ---------- BGM (YouTube IFrame API) ----------
-  var BGM_VIDEO_ID = "V1gTYew5k4U";
+  var BGM_VIDEO_ID = "Q_ScMi6sEsQ";
   var ytPlayerObj = null;
   var ytReady = false;
   var bgmWantsPlay = false;
@@ -1596,6 +1619,7 @@
       leftEl.classList.add("show");
       leftTeam.members.push(leftName);
       renderRails(leftIdx % state.teamCount);
+      playCardConfirmSfx();
     }, 60);
 
     var rightAppearAt = 60 + HOLD_SOLO;
@@ -1606,6 +1630,7 @@
         rightEl.classList.add("show");
         rightTeam.members.push(rightName);
         renderRails(rightIdx % state.teamCount);
+        playCardConfirmSfx();
       }, rightAppearAt);
 
       setTimeout(function () {
@@ -1619,6 +1644,7 @@
         h2hEl.classList.add("show");
         h2hCommentaryEl.textContent = headToHeadCommentary(leftName, rightName);
         h2hCommentaryEl.classList.add("show");
+        playH2hRevealSfx();
       }, revealAt);
     }
 
