@@ -132,21 +132,6 @@
   }
   .panel + .panel { margin-top: 16px; }
 
-  .admin-token {
-    max-width: 360px;
-    margin: 0 auto 32px;
-    text-align: center;
-  }
-  .admin-token label {
-    display: block; font-size: 0.76rem; font-weight: 600; letter-spacing: 0.04em;
-    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px;
-  }
-  .admin-token input {
-    width: 100%; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
-    padding: 9px 12px; color: var(--ink); font-size: 0.86rem; text-align: center;
-  }
-  .admin-token .status { margin: 8px 0 0; font-size: 0.76rem; color: var(--ink-faint); }
-
   .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-dim); }
   .empty-state p { margin: 0 0 4px; }
 
@@ -232,12 +217,6 @@
     <p id="heroSub">최근 드래프트 결과를 확인하고, 실제 경기 후 승/패/무와 POM을 등록하세요. <a href="gacha.html">드래프트 페이지로 이동 →</a></p>
   </div>
 
-  <div class="admin-token">
-    <label for="adminTokenInput">관리자 토큰</label>
-    <input type="password" id="adminTokenInput" placeholder="GitHub 토큰 붙여넣기" autocomplete="off" />
-    <p class="status" id="adminTokenStatus"></p>
-  </div>
-
   <div id="content"></div>
 </div>
 
@@ -245,48 +224,26 @@
 (function () {
   "use strict";
 
-  var REPO_OWNER = "whikebaintres";
-  var REPO_NAME = "team-draft";
-  var STATE_PATH = "gacha-state.json";
-  var adminToken = localStorage.getItem("gachaAdminToken") || "";
+  var FIREBASE_URL = "https://team-draft-1ab3a-default-rtdb.firebaseio.com";
+  var STATE_PATH = "/gachaState.json";
 
   var contentEl = document.getElementById("content");
-  var tokenInput = document.getElementById("adminTokenInput");
-  var tokenStatus = document.getElementById("adminTokenStatus");
-
-  tokenInput.value = adminToken;
-  updateTokenStatus(adminToken ? "토큰이 저장되어 있어요." : "점수를 등록하려면 쓰기 권한이 있는 GitHub 토큰이 필요해요.");
-  tokenInput.addEventListener("change", function () {
-    adminToken = tokenInput.value.trim();
-    if (adminToken) {
-      localStorage.setItem("gachaAdminToken", adminToken);
-      updateTokenStatus("토큰이 저장되었어요.");
-    } else {
-      localStorage.removeItem("gachaAdminToken");
-      updateTokenStatus("점수를 등록하려면 쓰기 권한이 있는 GitHub 토큰이 필요해요.");
-    }
-    render();
-  });
-
-  function updateTokenStatus(text) { tokenStatus.textContent = text; }
 
   function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  function b64EncodeUnicode(str) { return btoa(unescape(encodeURIComponent(str))); }
-  function b64DecodeUnicode(str) { return decodeURIComponent(escape(atob(str.replace(/\n/g, "")))); }
 
-  var stateData = null; // { playerStats, latestDraft }
+  var stateData = null; // { playerStats, headToHead, latestDraft }
   var reScoring = false;
 
   function loadState() {
     contentEl.innerHTML = '<div class="empty-state"><p>불러오는 중…</p></div>';
-    fetch(STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
-      .then(function (res) { return res.ok ? res.json() : { playerStats: {}, latestDraft: null }; })
+    fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (res) { return res.ok ? res.json() : { playerStats: {}, headToHead: {}, latestDraft: null }; })
       .then(function (data) {
-        stateData = data;
+        stateData = data || { playerStats: {}, headToHead: {}, latestDraft: null };
         reScoring = false;
         render();
       })
@@ -389,26 +346,18 @@
     var btn = document.getElementById("submitBtn");
     var note = document.getElementById("submitNote");
     if (!btn) return;
-    if (!adminToken) {
-      btn.disabled = true;
-      note.textContent = "관리자 토큰을 입력해야 등록할 수 있어요.";
-    } else {
-      btn.disabled = false;
-      note.textContent = "입력하지 않은 인원은 이번엔 기록되지 않아요 (참고용).";
-    }
+    btn.disabled = false;
+    note.textContent = "입력하지 않은 인원은 이번엔 기록되지 않아요 (참고용).";
   }
 
-  async function fetchLatestFromGitHub() {
-    var apiUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STATE_PATH;
-    var res = await fetch(apiUrl, {
-      headers: { Authorization: "Bearer " + adminToken, Accept: "application/vnd.github+json" }
-    });
-    if (res.status !== 200) return null;
-    var meta = await res.json();
-    var data = { playerStats: {}, headToHead: {}, latestDraft: null };
-    try { data = JSON.parse(b64DecodeUnicode(meta.content)); } catch (e) {}
+  async function fetchLatestState() {
+    var res = await fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return null;
+    var data = await res.json();
+    if (!data) data = { playerStats: {}, headToHead: {}, latestDraft: null };
     if (!data.headToHead) data.headToHead = {};
-    return { data: data, sha: meta.sha, apiUrl: apiUrl };
+    if (!data.playerStats) data.playerStats = {};
+    return { data: data };
   }
 
   // pairs: [[nameX, nameY], ...], resultsMap: { name: {outcome, pom} }, sign: +1 apply / -1 reverse
@@ -438,12 +387,11 @@
   }
 
   async function submitScores() {
-    if (!adminToken) return;
     var note = document.getElementById("submitNote");
     note.textContent = "등록하는 중…";
 
     try {
-      var fresh = await fetchLatestFromGitHub();
+      var fresh = await fetchLatestState();
       if (!fresh || !fresh.data.latestDraft) {
         note.textContent = "등록 실패 (최신 데이터를 불러오지 못했어요).";
         return;
@@ -495,15 +443,10 @@
       fresh.data.headToHead = headToHead;
       fresh.data.latestDraft = draft;
 
-      var body = { message: "gacha admin: register scores", content: b64EncodeUnicode(JSON.stringify(fresh.data)), sha: fresh.sha };
-      var putRes = await fetch(fresh.apiUrl, {
+      var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
         method: "PUT",
-        headers: {
-          Authorization: "Bearer " + adminToken,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fresh.data)
       });
 
       if (putRes.ok) {
@@ -511,7 +454,7 @@
         reScoring = false;
         render();
       } else {
-        note.textContent = "등록 실패 (토큰 권한을 확인해주세요).";
+        note.textContent = "등록 실패 (네트워크 오류).";
       }
     } catch (e) {
       note.textContent = "등록 실패 (네트워크 오류).";

@@ -421,25 +421,6 @@
     margin: 28px auto 0;
     text-align: center;
   }
-  .host-panel label {
-    display: block;
-    font-size: 0.76rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin-bottom: 8px;
-  }
-  .host-panel input {
-    width: 100%;
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 9px 12px;
-    color: var(--ink);
-    font-size: 0.86rem;
-    text-align: center;
-  }
   .host-status {
     margin: 8px 0 0;
     font-size: 0.76rem;
@@ -935,8 +916,6 @@
     </div>
 
     <div class="host-panel">
-      <label for="hostTokenInput">공유 설정 (선택)</label>
-      <input type="password" id="hostTokenInput" placeholder="GitHub 토큰 붙여넣기" autocomplete="off" />
       <p class="host-status" id="hostTokenStatus"></p>
     </div>
   </section>
@@ -973,7 +952,7 @@
   var DEFAULT_ROSTER = ["고재형", "지한규", "이예은", "편한슬", "이도현", "조이진", "유다현", "임준", "김탁우", "원종훈", "임별"];
   var POSITION_NAMES = ["선봉전", "차봉전", "중견전", "부장전", "대장전"];
 
-  // 관리자 점수 등록 페이지(admin.html)가 gacha-state.json에 누적시킨 실제 전적으로 채워짐.
+  // 관리자 점수 등록 페이지(admin.html)가 Firebase Realtime Database에 누적시킨 실제 전적으로 채워짐.
   // 불러오기 전/실패 시에는 빈 객체 -> getStats()가 전원 0으로 폴백.
   var PLAYER_STATS = {};
   var HEAD_TO_HEAD = {};
@@ -1005,21 +984,12 @@
 
   function $(id) { return document.getElementById(id); }
 
-  // ---------- Shared state (gacha-state.json in this repo, via GitHub Contents API) ----------
-  var REPO_OWNER = "whikebaintres";
-  var REPO_NAME = "team-draft";
-  var STATE_PATH = "gacha-state.json";
-  var hostToken = localStorage.getItem("gachaHostToken") || "";
-
-  function b64EncodeUnicode(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-  }
-  function b64DecodeUnicode(str) {
-    return decodeURIComponent(escape(atob(str.replace(/\n/g, ""))));
-  }
+  // ---------- Shared state (Firebase Realtime Database, open read/write — no token needed) ----------
+  var FIREBASE_URL = "https://team-draft-1ab3a-default-rtdb.firebaseio.com";
+  var STATE_PATH = "/gachaState.json";
 
   function loadPlayerStats() {
-    fetch(STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
+    fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (data) {
         if (data && data.playerStats) PLAYER_STATS = data.playerStats;
@@ -1034,19 +1004,13 @@
   }
 
   async function publishLatestDraft() {
-    if (!hostToken) return;
     updateHostStatus("공유하는 중…");
     try {
-      var apiUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STATE_PATH;
-      var getRes = await fetch(apiUrl, {
-        headers: { Authorization: "Bearer " + hostToken, Accept: "application/vnd.github+json" }
-      });
-      var sha = null;
-      var current = { playerStats: {}, latestDraft: null };
-      if (getRes.status === 200) {
-        var meta = await getRes.json();
-        sha = meta.sha;
-        try { current = JSON.parse(b64DecodeUnicode(meta.content)); } catch (e) {}
+      var getRes = await fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
+      var current = { playerStats: {}, headToHead: {}, latestDraft: null };
+      if (getRes.ok) {
+        var data = await getRes.json();
+        if (data) current = data;
       }
       var pairs = [];
       for (var i = 0; i + 1 < state.order.length; i += 2) {
@@ -1063,21 +1027,15 @@
         pairs: pairs,
         results: null
       };
-      var body = { message: "gacha draft: publish latest draft", content: b64EncodeUnicode(JSON.stringify(current)) };
-      if (sha) body.sha = sha;
-      var putRes = await fetch(apiUrl, {
+      var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
         method: "PUT",
-        headers: {
-          Authorization: "Bearer " + hostToken,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(current)
       });
       if (putRes.ok) {
         updateHostStatus("공유 완료! 관리자 페이지(admin.html)에서 채점할 수 있어요.");
       } else {
-        updateHostStatus("공유 실패 (토큰 권한을 확인해주세요).");
+        updateHostStatus("공유 실패 (네트워크 오류).");
       }
     } catch (e) {
       updateHostStatus("공유 실패 (네트워크 오류).");
@@ -1707,20 +1665,6 @@
     stopBgm();
     $("bgmControl").hidden = true;
     setRecordMode("official");
-  });
-
-  var hostTokenInput = $("hostTokenInput");
-  hostTokenInput.value = hostToken;
-  updateHostStatus(hostToken ? "토큰이 저장되어 있어요. 드래프트가 끝나면 자동으로 공유돼요." : "토큰이 없으면 이 브라우저에서만 진행돼요 (공유 안 됨).");
-  hostTokenInput.addEventListener("change", function () {
-    hostToken = hostTokenInput.value.trim();
-    if (hostToken) {
-      localStorage.setItem("gachaHostToken", hostToken);
-      updateHostStatus("토큰이 저장되었어요. 드래프트가 끝나면 자동으로 공유돼요.");
-    } else {
-      localStorage.removeItem("gachaHostToken");
-      updateHostStatus("토큰이 없으면 이 브라우저에서만 진행돼요 (공유 안 됨).");
-    }
   });
 
   syncRosterList();
