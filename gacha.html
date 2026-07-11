@@ -454,7 +454,7 @@
 
   .duel-stage {
     position: relative;
-    min-height: 340px;
+    min-height: 400px;
     border-radius: 26px;
     overflow: hidden;
     isolation: isolate;
@@ -528,7 +528,7 @@
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    padding: 46px 16px 20px;
+    padding: 88px 16px 24px;
     gap: 6px;
   }
 
@@ -574,13 +574,13 @@
     padding: 22px 18px 20px;
     text-align: center;
     background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-    border: 1px solid var(--glow-color, #888);
+    border: 2px solid var(--glow-color, #888);
+    border-radius: 22px;
     box-shadow:
       0 0 0 1px color-mix(in srgb, var(--glow-color, #888) 35%, transparent),
       inset 0 0 0 1px rgba(255, 255, 255, 0.08),
       0 0 44px -8px var(--glow-color, #888),
       0 20px 40px -22px rgba(0, 0, 0, 0.85);
-    clip-path: polygon(50% 0%, 88% 8%, 100% 20%, 100% 88%, 84% 100%, 16% 100%, 0% 88%, 0% 20%, 12% 8%);
   }
 
   .contender-portrait {
@@ -595,6 +595,15 @@
     height: 74px;
     opacity: 0.92;
     filter: drop-shadow(0 0 18px var(--glow-color, #fff));
+  }
+  .contender-portrait img {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 2px solid var(--glow-color, #fff);
+    box-shadow: 0 0 22px -2px var(--glow-color, #fff);
   }
   .contender-team-tag {
     display: inline-block;
@@ -730,8 +739,8 @@
   .result-grid {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-bottom: 36px;
+    gap: 8px;
+    margin-bottom: 22px;
   }
   .round-card {
     position: relative;
@@ -739,27 +748,27 @@
     -webkit-backdrop-filter: blur(24px) saturate(160%);
     backdrop-filter: blur(24px) saturate(160%);
     border: 1px solid var(--glass-border);
-    border-radius: 18px;
-    padding: 20px 22px;
+    border-radius: 14px;
+    padding: 10px 20px;
     box-shadow: var(--shadow-soft);
     animation: card-drop 0.5s cubic-bezier(.2,.8,.3,1.05) both;
   }
   .round-label {
-    text-align: center; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.04em;
-    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 14px;
+    text-align: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 6px;
   }
   .round-match { display: flex; align-items: center; gap: 12px; }
   .round-side {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    flex: 1; display: flex; flex-direction: row; align-items: baseline; justify-content: center; gap: 8px;
     text-align: center; min-width: 0;
   }
-  .round-side .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--side-color, var(--accent)); }
+  .round-side .dot { display: none; }
   .round-side .name {
-    font-size: 1.35rem; font-weight: 800; color: var(--side-color, var(--ink));
+    font-size: 1.1rem; font-weight: 800; color: var(--side-color, var(--ink));
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
   }
-  .round-side .team-tag { font-size: 0.72rem; color: var(--ink-faint); }
-  .round-vs { font-size: 0.78rem; font-weight: 800; color: var(--ink-faint); flex-shrink: 0; }
+  .round-side .team-tag { font-size: 0.68rem; color: var(--ink-faint); flex-shrink: 0; }
+  .round-vs { font-size: 0.72rem; font-weight: 800; color: var(--ink-faint); flex-shrink: 0; }
   @media (max-width: 480px) {
     .round-match { flex-direction: column; }
     .round-vs { order: 2; }
@@ -1165,10 +1174,11 @@
   }
 
   // 효과음(카드 확정/상대전적 공개) 볼륨을 BGM 볼륨 슬라이더 값(0~100)에 맞춰 함께 조정한다.
+  // 상대전적 공개 효과음(charge)은 카드 확정음보다 상대적으로 커서 절반(50%)으로 낮춘다.
   function updateSfxVolume() {
     var v = bgmVolume / 100;
     cardConfirmSfx.volume = v;
-    h2hRevealSfx.volume = v;
+    h2hRevealSfx.volume = v * 0.5;
   }
 
   updateBgmToggleIcon();
@@ -1408,6 +1418,22 @@
     '<path d="M50 58c-24 0-38 16-38 34v8h76v-8c0-18-14-34-38-34z"/>' +
     '</svg>';
 
+  // 선수별 실물 포트레이트 (players/ 하위, 회색 톤 보정 + 원형 마스크 처리된 PNG).
+  // 여기에 없는 선수는 기존 실루엣 아이콘으로 폴백.
+  var PLAYER_IMAGES = {
+    "이도현": "players/leedohyun.png",
+    "임준": "players/imjun.png",
+    "김탁우": "players/kimtakwoo.png",
+    "이예은": "players/leeyeeun.png",
+    "편한슬": "players/pyeonhanseul.png",
+    "고재형": "players/gojaehyung.png",
+    "원종훈": "players/wonjonghoon.png",
+    "조이진": "players/joijin.png",
+    "지한규": "players/jihankyu.png",
+    "유다현": "players/yudahyun.png",
+    "임별": "players/imbyeol.png"
+  };
+
   function buildStatEl(labelText) {
     var stat = document.createElement("div");
     stat.className = "stat";
@@ -1469,7 +1495,7 @@
     el.appendChild(card);
 
     el._refs = {
-      card: card, name: name, tag: tag,
+      card: card, portrait: portrait, name: name, tag: tag,
       win: statWin.val, loss: statLoss.val, rate: statRate.val, mvp: statMvp.val
     };
     return el;
@@ -1542,6 +1568,11 @@
   function fillContender(el, personName, team) {
     var refs = el._refs;
     refs.card.style.setProperty("--glow-color", team.color);
+    if (PLAYER_IMAGES[personName]) {
+      refs.portrait.innerHTML = '<img src="' + PLAYER_IMAGES[personName] + '" alt="' + escapeHtml(personName) + '" />';
+    } else {
+      refs.portrait.innerHTML = SILHOUETTE_SVG;
+    }
     refs.tag.textContent = team.name;
     refs.tag.style.color = team.color;
     refs.name.textContent = personName;
