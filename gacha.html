@@ -1519,15 +1519,17 @@
   }
 
   function headToHeadLabel(leftName, rightName) {
+    // 두 선수의 과거 맞대결 기록임을 명확히 하기 위해 항상 "상대 전적 ·" 접두어를 붙인다.
+    var prefix = "상대 전적 · ";
     var h2h = getHeadToHead(leftName, rightName);
-    if (h2h.total === 0) return "첫 맞대결";
+    if (h2h.total === 0) return prefix + "첫 맞대결";
     if (h2h.win === h2h.loss) {
-      return "상대전적 " + h2h.win + "승 " + h2h.loss + "패 동률" + (h2h.draw ? " (" + h2h.draw + "무)" : "");
+      return prefix + h2h.win + "승 " + h2h.loss + "패 동률" + (h2h.draw ? " (" + h2h.draw + "무)" : "");
     }
     var leaderName = h2h.win > h2h.loss ? leftName : rightName;
     var leaderWins = Math.max(h2h.win, h2h.loss);
     var otherWins = Math.min(h2h.win, h2h.loss);
-    return leaderName + " " + leaderWins + "승 " + otherWins + "패로 우위" + (h2h.draw ? " (" + h2h.draw + "무)" : "");
+    return prefix + leaderName + " " + leaderWins + "승 " + otherWins + "패로 우위" + (h2h.draw ? " (" + h2h.draw + "무)" : "");
   }
 
   var FIRST_MEETING_LINES = [
