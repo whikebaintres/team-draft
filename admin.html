@@ -103,7 +103,7 @@
     -webkit-font-smoothing: antialiased;
   }
   button { font-family: var(--font-body); cursor: pointer; }
-  button:focus-visible, input:focus-visible {
+  button:focus-visible, input:focus-visible, select:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
@@ -145,40 +145,60 @@
     margin: 0 0 12px;
   }
 
-  .team-block-head {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  /* 년월 선택 패널 */
+  .select-panel { display: flex; flex-direction: column; gap: 8px; }
+  .select-label {
+    font-size: 0.78rem; font-weight: 700; color: var(--ink-faint);
+    letter-spacing: 0.02em;
   }
-  .team-block-head .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--team-color, var(--accent)); }
-  .team-block-head .name { font-weight: 700; font-size: 1.02rem; color: var(--team-color, var(--ink)); }
+  .month-select {
+    font-family: var(--font-body); font-size: 0.95rem; font-weight: 600; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; width: 100%;
+  }
 
-  .member-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 9px 0; border-top: 1px solid var(--line);
+  /* 비밀번호 잠금 패널 */
+  .lock-panel { display: flex; flex-direction: column; gap: 10px; }
+  .lock-panel.unlocked { flex-direction: row; align-items: center; padding: 16px 26px; }
+  .password-row { display: flex; gap: 8px; }
+  .password-input {
+    flex: 1; font-family: var(--font-body); font-size: 0.95rem; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
   }
-  .member-row:first-of-type { border-top: none; }
-  .member-row .name { font-size: 0.92rem; font-weight: 600; }
+  .lock-status { font-size: 0.82rem; color: var(--ink-faint); }
+  .lock-status.good { color: var(--good); font-weight: 700; }
+  .lock-status.danger { color: var(--danger); font-weight: 600; }
 
-  .segmented { display: inline-flex; gap: 6px; }
-  .segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-  .segmented label {
-    font-size: 0.78rem; font-weight: 700; padding: 6px 12px; border-radius: 999px;
-    border: 1px solid var(--line); color: var(--ink-dim); background: var(--panel-2);
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  /* 라운드 카드 */
+  .round-label {
+    text-align: center; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 14px;
   }
-  .segmented input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .segmented input[value="win"]:checked + label { background: var(--good-soft); border-color: var(--good); color: var(--good); }
-  .segmented input[value="loss"]:checked + label { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
-  .segmented input[value="draw"]:checked + label { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+  .round-match { display: flex; align-items: center; gap: 12px; }
+  .round-side {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    text-align: center; min-width: 0;
+  }
+  .round-side .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--team-color, var(--accent)); }
+  .round-side .name { font-size: 0.95rem; font-weight: 700; color: var(--team-color, var(--ink)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .round-vs { font-size: 0.78rem; font-weight: 800; color: var(--ink-faint); flex-shrink: 0; }
 
-  .pom-list { display: flex; flex-direction: column; gap: 2px; }
-  .pom-row {
-    display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-radius: 8px;
-    cursor: pointer;
+  .score-input {
+    width: 120px; text-align: center; font-family: var(--font-body); font-size: 1.05rem; font-weight: 700;
+    color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 6px; -moz-appearance: textfield;
   }
-  .pom-row:hover { background: var(--bg-alt); }
-  .pom-row input { accent-color: var(--accent); }
-  .pom-row .name { font-size: 0.9rem; font-weight: 600; }
-  .pom-row .team-tag { font-size: 0.72rem; color: var(--ink-faint); }
+  .score-input::-webkit-outer-spin-button, .score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .score-input:disabled { opacity: 0.5; cursor: not-allowed; }
+  .score-value { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+
+  .badge {
+    font-size: 0.74rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+  }
+  .badge.win { background: var(--good-soft); color: var(--good); }
+  .badge.loss { background: var(--danger-soft); color: var(--danger); }
+  .badge.draw { background: var(--warn-soft); color: var(--warn); }
+  .badge.none { background: var(--bg-alt); color: var(--ink-faint); }
 
   .btn {
     border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
@@ -190,20 +210,20 @@
   .btn-primary { background: var(--accent); border-color: var(--accent); color: #ffffff; }
   .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; background: var(--panel); border-color: var(--line); color: var(--ink-faint); }
+  .btn-danger { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: var(--danger); border-color: var(--danger); color: #ffffff; }
+  .btn-danger:disabled { opacity: 0.35; cursor: not-allowed; background: var(--panel); border-color: var(--line); color: var(--ink-faint); }
   .link-btn { background: none; border: none; color: var(--accent); font-weight: 500; font-size: 0.92rem; padding: 6px 0; }
   .link-btn:hover { color: var(--accent-hover); text-decoration: underline; }
 
   .submit-row { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 24px; }
+  .submit-btn-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
   .submit-note { font-size: 0.82rem; color: var(--ink-faint); text-align: center; }
 
-  .result-summary .member-row .badge {
-    font-size: 0.74rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  @media (max-width: 480px) {
+    .round-match { flex-direction: column; }
+    .round-vs { order: 2; }
   }
-  .badge.win { background: var(--good-soft); color: var(--good); }
-  .badge.loss { background: var(--danger-soft); color: var(--danger); }
-  .badge.draw { background: var(--warn-soft); color: var(--warn); }
-  .badge.none { background: var(--bg-alt); color: var(--ink-faint); }
-  .pom-flag { font-size: 0.7rem; font-weight: 700; color: var(--accent); margin-left: 8px; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
@@ -214,9 +234,11 @@
   <div class="hero">
     <span class="eyebrow">E스포츠 동호회</span>
     <h1>관리자 점수 등록</h1>
-    <p id="heroSub">최근 드래프트 결과를 확인하고, 실제 경기 후 승/패/무와 POM을 등록하세요. <a href="gacha.html">드래프트 페이지로 이동 →</a></p>
+    <p id="heroSub">년월을 선택해 대진표를 확인하고, 라운드별로 두 선수의 점수를 입력하면 승/패/무가 자동으로 기록돼요. <a href="gacha.html">드래프트 페이지로 이동 →</a></p>
   </div>
 
+  <div id="monthPanel"></div>
+  <div id="lockPanel"></div>
   <div id="content"></div>
 </div>
 
@@ -226,7 +248,10 @@
 
   var FIREBASE_URL = "https://team-draft-1ab3a-default-rtdb.firebaseio.com";
   var STATE_PATH = "/gachaState.json";
+  var EDIT_PASSWORD = "daft";
 
+  var monthPanelEl = document.getElementById("monthPanel");
+  var lockPanelEl = document.getElementById("lockPanel");
   var contentEl = document.getElementById("content");
 
   function escapeHtml(str) {
@@ -235,21 +260,36 @@
     });
   }
 
-  var stateData = null; // { playerStats, headToHead, latestDraft }
-  var reScoring = false;
+  var POSITION_NAMES = ["선봉전", "차봉전", "중견전", "부장전", "대장전"];
+  function positionLabel(pairIndex, totalPairs) {
+    var list;
+    if (totalPairs === 4) {
+      list = ["선봉전", "차봉전", "부장전", "대장전"];
+    } else if (totalPairs >= 5 || totalPairs <= 0) {
+      list = POSITION_NAMES;
+    } else {
+      list = POSITION_NAMES.slice(0, totalPairs - 1).concat("대장전");
+    }
+    return pairIndex < list.length ? list[pairIndex] : (pairIndex + 1) + "번째 대결";
+  }
 
-  function loadState() {
-    contentEl.innerHTML = '<div class="empty-state"><p>불러오는 중…</p></div>';
-    fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
-      .then(function (res) { return res.ok ? res.json() : { playerStats: {}, headToHead: {}, latestDraft: null }; })
-      .then(function (data) {
-        stateData = data || { playerStats: {}, headToHead: {}, latestDraft: null };
-        reScoring = false;
-        render();
-      })
-      .catch(function () {
-        contentEl.innerHTML = '<div class="empty-state"><p>불러오기 실패. 새로고침해보세요.</p></div>';
-      });
+  var stateData = null; // { playerStats, headToHead, drafts, latestDraft }
+  var selectedYearMonth = null;
+  var reScoring = false;
+  var unlocked = false;
+  try { unlocked = sessionStorage.getItem("adminUnlocked") === "1"; } catch (e) {}
+
+  // 새 데이터는 drafts[년월]에 쌓인다. latestDraft는 이 기능 도입 이전에 기록된 데이터를 위한
+  // 마이그레이션 폴백일 뿐이므로, drafts에 아직 없는 경우에만 합쳐 보여준다.
+  function collectDrafts(data) {
+    var map = {};
+    if (data && data.drafts) {
+      Object.keys(data.drafts).forEach(function (k) { map[k] = data.drafts[k]; });
+    }
+    if (data && data.latestDraft && data.latestDraft.yearMonth && !map[data.latestDraft.yearMonth]) {
+      map[data.latestDraft.yearMonth] = data.latestDraft;
+    }
+    return map;
   }
 
   function allMembers(draft) {
@@ -262,8 +302,85 @@
     return list;
   }
 
-  function render() {
-    if (!stateData || !stateData.latestDraft) {
+  function loadState() {
+    contentEl.innerHTML = '<div class="empty-state"><p>불러오는 중…</p></div>';
+    fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        stateData = data || { playerStats: {}, headToHead: {}, drafts: {}, latestDraft: null };
+        reScoring = false;
+        renderMonthPanel();
+        renderLockPanel();
+        renderContent();
+      })
+      .catch(function () {
+        contentEl.innerHTML = '<div class="empty-state"><p>불러오기 실패. 새로고침해보세요.</p></div>';
+      });
+  }
+
+  function renderMonthPanel() {
+    var draftsMap = collectDrafts(stateData);
+    var keys = Object.keys(draftsMap).sort(function (a, b) {
+      return (draftsMap[b].createdAt || 0) - (draftsMap[a].createdAt || 0);
+    });
+    if (!keys.length) { monthPanelEl.innerHTML = ""; return; }
+    if (!selectedYearMonth || keys.indexOf(selectedYearMonth) === -1) selectedYearMonth = keys[0];
+
+    var opts = keys.map(function (k) {
+      var tag = draftsMap[k].scored ? " · 채점 완료" : " · 미채점";
+      return '<option value="' + escapeHtml(k) + '"' + (k === selectedYearMonth ? " selected" : "") + '>' + escapeHtml(k) + tag + '</option>';
+    }).join("");
+
+    monthPanelEl.innerHTML =
+      '<div class="panel select-panel"><label class="select-label" for="monthSelect">조회할 년월</label>' +
+      '<select id="monthSelect" class="month-select">' + opts + '</select></div>';
+
+    document.getElementById("monthSelect").addEventListener("change", function (e) {
+      selectedYearMonth = e.target.value;
+      reScoring = false;
+      renderContent();
+    });
+  }
+
+  function renderLockPanel() {
+    if (unlocked) {
+      lockPanelEl.innerHTML = '<div class="panel lock-panel unlocked"><span class="lock-status good">🔓 점수 수정 가능</span></div>';
+      return;
+    }
+    lockPanelEl.innerHTML =
+      '<div class="panel lock-panel">' +
+      '<label class="select-label" for="pwInput">점수 수정 비밀번호</label>' +
+      '<div class="password-row">' +
+      '<input type="password" id="pwInput" class="password-input" placeholder="비밀번호 입력" autocomplete="off" />' +
+      '<button class="btn" id="pwBtn">잠금 해제</button>' +
+      '</div><span class="lock-status" id="pwNote">비밀번호를 입력해야 점수를 등록/수정할 수 있어요.</span></div>';
+
+    document.getElementById("pwBtn").addEventListener("click", tryUnlock);
+    document.getElementById("pwInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") tryUnlock();
+    });
+  }
+
+  function tryUnlock() {
+    var input = document.getElementById("pwInput");
+    var note = document.getElementById("pwNote");
+    if (input.value === EDIT_PASSWORD) {
+      unlocked = true;
+      try { sessionStorage.setItem("adminUnlocked", "1"); } catch (e) {}
+      renderLockPanel();
+      renderContent();
+    } else {
+      note.textContent = "비밀번호가 올바르지 않아요.";
+      note.className = "lock-status danger";
+      input.value = "";
+      input.focus();
+    }
+  }
+
+  function renderContent() {
+    var draftsMap = collectDrafts(stateData);
+    var draft = draftsMap[selectedYearMonth];
+    if (!draft) {
       contentEl.innerHTML =
         '<div class="panel"><div class="empty-state">' +
         '<p>아직 등록할 드래프트 결과가 없어요.</p>' +
@@ -271,7 +388,6 @@
         '</div></div>';
       return;
     }
-    var draft = stateData.latestDraft;
     if (draft.scored && !reScoring) {
       renderSummary(draft);
     } else {
@@ -279,88 +395,155 @@
     }
   }
 
-  function renderSummary(draft) {
-    var html = draft.yearMonth ? '<p class="draft-meta">' + escapeHtml(draft.yearMonth) + ' 드래프트</p>' : "";
-    html += '<div class="panel result-summary">';
+  function memberTeamMap(draft) {
+    var map = {};
     draft.teams.forEach(function (team) {
-      html += '<div class="team-block-head" style="--team-color:' + team.color + '"><span class="dot"></span><span class="name">' + escapeHtml(team.name) + '</span></div>';
-      team.members.forEach(function (m) {
-        var r = (draft.results && draft.results[m]) || {};
-        var outcome = r.outcome || "none";
-        var label = outcome === "win" ? "승" : outcome === "loss" ? "패" : outcome === "draw" ? "무" : "미입력";
-        html += '<div class="member-row"><span class="name">' + escapeHtml(m) + (r.pom ? '<span class="pom-flag">POM</span>' : '') + '</span><span class="badge ' + outcome + '">' + label + '</span></div>';
-      });
+      team.members.forEach(function (m) { map[m] = team; });
     });
-    html += '</div>';
-    html += '<div class="submit-row"><button class="link-btn" id="rescoreBtn">다시 채점하기 ›</button></div>';
-    contentEl.innerHTML = html;
-    document.getElementById("rescoreBtn").addEventListener("click", function () {
-      reScoring = true;
-      render();
-    });
+    return map;
+  }
+
+  function setBadge(el, outcome) {
+    if (!el) return;
+    var label = outcome === "win" ? "승" : outcome === "loss" ? "패" : outcome === "draw" ? "무" : "미입력";
+    el.className = "badge " + (outcome || "none");
+    el.textContent = label;
   }
 
   function renderForm(draft) {
     var prevResults = (reScoring && draft.results) || {};
+    var teamOf = memberTeamMap(draft);
     var html = draft.yearMonth ? '<p class="draft-meta">' + escapeHtml(draft.yearMonth) + ' 드래프트</p>' : "";
-    draft.teams.forEach(function (team) {
-      html += '<div class="panel"><div class="team-block-head" style="--team-color:' + team.color + '"><span class="dot"></span><span class="name">' + escapeHtml(team.name) + '</span></div>';
-      team.members.forEach(function (m) {
-        var prev = prevResults[m] || {};
-        var safeName = escapeHtml(m);
-        var groupName = "outcome__" + encodeURIComponent(m);
-        html += '<div class="member-row"><span class="name">' + safeName + '</span><div class="segmented">' +
-          radioOpt(groupName, "win", "승", prev.outcome === "win") +
-          radioOpt(groupName, "loss", "패", prev.outcome === "loss") +
-          radioOpt(groupName, "draw", "무", prev.outcome === "draw") +
-          '</div></div>';
-      });
-      html += '</div>';
+
+    draft.pairs.forEach(function (pair, idx) {
+      var nameA = pair[0], nameB = pair[1];
+      var label = positionLabel(idx, draft.pairs.length);
+      html += '<div class="panel round-card">';
+      html += '<p class="round-label">' + escapeHtml(label) + '</p>';
+      html += '<div class="round-match">';
+      html += roundSideEditable(nameA, teamOf[nameA] || {}, prevResults[nameA] || {});
+      html += '<span class="round-vs">VS</span>';
+      html += roundSideEditable(nameB, teamOf[nameB] || {}, prevResults[nameB] || {});
+      html += '</div></div>';
     });
 
-    html += '<div class="panel"><div class="team-block-head"><span class="name">POM (Player of the Match)</span></div><div class="pom-list">';
-    var members = allMembers(draft);
-    var anyPomChecked = members.some(function (m) { return prevResults[m.name] && prevResults[m.name].pom; });
-    html += '<label class="pom-row"><input type="radio" name="pom" value="" ' + (anyPomChecked ? "" : "checked") + ' /><span class="name">POM 없음</span></label>';
-    members.forEach(function (m) {
-      var checked = prevResults[m.name] && prevResults[m.name].pom;
-      html += '<label class="pom-row"><input type="radio" name="pom" value="' + encodeURIComponent(m.name) + '" ' + (checked ? "checked" : "") + ' /><span class="name">' + escapeHtml(m.name) + '</span><span class="team-tag">' + escapeHtml(m.team.name) + '</span></label>';
-    });
-    html += '</div></div>';
-
-    html += '<div class="submit-row"><button class="btn btn-primary" id="submitBtn">점수 등록하기</button><span class="submit-note" id="submitNote"></span></div>';
+    html += '<div class="submit-row"><div class="submit-btn-row">' +
+      '<button class="btn btn-primary" id="submitBtn">점수 등록하기</button>' +
+      '<button class="btn btn-danger" id="deleteBtn">이 달 데이터 삭제</button>' +
+      '</div><span class="submit-note" id="submitNote"></span></div>';
 
     contentEl.innerHTML = html;
+    bindScoreInputs(draft);
     updateSubmitState();
-
-    document.getElementById("submitBtn").addEventListener("click", submitScores);
+    document.getElementById("submitBtn").addEventListener("click", function () { submitScores(draft); });
+    document.getElementById("deleteBtn").addEventListener("click", function () { deleteMonth(draft.yearMonth); });
   }
 
-  function radioOpt(groupName, value, label, checked) {
-    var id = groupName + "__" + value;
-    return '<input type="radio" name="' + groupName + '" id="' + id + '" value="' + value + '" ' + (checked ? "checked" : "") + ' />' +
-      '<label for="' + id + '">' + label + '</label>';
+  function roundSideEditable(name, team, prev) {
+    var safeName = escapeHtml(name);
+    var inputName = "score__" + encodeURIComponent(name);
+    var val = (prev && typeof prev.score === "number") ? prev.score : "";
+    var dis = unlocked ? "" : "disabled";
+    return '<div class="round-side" style="--team-color:' + (team.color || "var(--accent)") + '">' +
+      '<span class="dot"></span><span class="name">' + safeName + '</span>' +
+      '<input type="number" class="score-input" name="' + inputName + '" min="0" step="1" inputmode="numeric" value="' + escapeHtml(val) + '" ' + dis + ' />' +
+      '<span class="badge none" data-badge-for="' + inputName + '">미입력</span>' +
+      '</div>';
+  }
+
+  function bindScoreInputs(draft) {
+    draft.pairs.forEach(function (pair) {
+      var nameA = pair[0], nameB = pair[1];
+      var inputA = document.querySelector('input[name="score__' + encodeURIComponent(nameA) + '"]');
+      var inputB = document.querySelector('input[name="score__' + encodeURIComponent(nameB) + '"]');
+      if (!inputA || !inputB) return;
+      function refresh() {
+        inputA.value = inputA.value.replace(/[^0-9]/g, "");
+        inputB.value = inputB.value.replace(/[^0-9]/g, "");
+        updateRoundBadges(nameA, inputA, nameB, inputB);
+      }
+      inputA.addEventListener("input", refresh);
+      inputB.addEventListener("input", refresh);
+      updateRoundBadges(nameA, inputA, nameB, inputB);
+    });
+  }
+
+  function updateRoundBadges(nameA, inputA, nameB, inputB) {
+    var badgeA = document.querySelector('[data-badge-for="score__' + encodeURIComponent(nameA) + '"]');
+    var badgeB = document.querySelector('[data-badge-for="score__' + encodeURIComponent(nameB) + '"]');
+    var a = inputA.value !== "" ? parseInt(inputA.value, 10) : null;
+    var b = inputB.value !== "" ? parseInt(inputB.value, 10) : null;
+    var outcomeA = null, outcomeB = null;
+    if (a !== null && b !== null && !isNaN(a) && !isNaN(b)) {
+      if (a > b) { outcomeA = "win"; outcomeB = "loss"; }
+      else if (a < b) { outcomeA = "loss"; outcomeB = "win"; }
+      else { outcomeA = "draw"; outcomeB = "draw"; }
+    }
+    setBadge(badgeA, outcomeA);
+    setBadge(badgeB, outcomeB);
   }
 
   function updateSubmitState() {
     var btn = document.getElementById("submitBtn");
+    var delBtn = document.getElementById("deleteBtn");
     var note = document.getElementById("submitNote");
     if (!btn) return;
-    btn.disabled = false;
-    note.textContent = "입력하지 않은 인원은 이번엔 기록되지 않아요 (참고용).";
+    btn.disabled = !unlocked;
+    if (delBtn) delBtn.disabled = !unlocked;
+    note.textContent = unlocked
+      ? "두 선수의 점수를 모두 입력한 라운드만 반영돼요."
+      : "위에서 비밀번호를 입력해야 등록/삭제할 수 있어요.";
+  }
+
+  function renderSummary(draft) {
+    var teamOf = memberTeamMap(draft);
+    var html = draft.yearMonth ? '<p class="draft-meta">' + escapeHtml(draft.yearMonth) + ' 드래프트</p>' : "";
+
+    draft.pairs.forEach(function (pair, idx) {
+      var nameA = pair[0], nameB = pair[1];
+      var label = positionLabel(idx, draft.pairs.length);
+      var rA = (draft.results && draft.results[nameA]) || {};
+      var rB = (draft.results && draft.results[nameB]) || {};
+      html += '<div class="panel round-card">';
+      html += '<p class="round-label">' + escapeHtml(label) + '</p>';
+      html += '<div class="round-match">';
+      html += roundSideReadonly(nameA, teamOf[nameA] || {}, rA);
+      html += '<span class="round-vs">VS</span>';
+      html += roundSideReadonly(nameB, teamOf[nameB] || {}, rB);
+      html += '</div></div>';
+    });
+
+    html += '<div class="submit-row"><button class="link-btn" id="rescoreBtn">다시 채점하기 ›</button></div>';
+    contentEl.innerHTML = html;
+    document.getElementById("rescoreBtn").addEventListener("click", function () {
+      reScoring = true;
+      renderContent();
+    });
+  }
+
+  function roundSideReadonly(name, team, r) {
+    var safeName = escapeHtml(name);
+    var outcome = r.outcome || "none";
+    var scoreText = (typeof r.score === "number") ? r.score : "-";
+    return '<div class="round-side" style="--team-color:' + (team.color || "var(--accent)") + '">' +
+      '<span class="dot"></span><span class="name">' + safeName + '</span>' +
+      '<span class="score-value">' + escapeHtml(scoreText) + '</span>' +
+      '<span class="badge ' + outcome + '">' + (outcome === "win" ? "승" : outcome === "loss" ? "패" : outcome === "draw" ? "무" : "미입력") + '</span>' +
+      '</div>';
   }
 
   async function fetchLatestState() {
     var res = await fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
     if (!res.ok) return null;
     var data = await res.json();
-    if (!data) data = { playerStats: {}, headToHead: {}, latestDraft: null };
+    if (!data) data = { playerStats: {}, headToHead: {}, drafts: {}, latestDraft: null };
     if (!data.headToHead) data.headToHead = {};
     if (!data.playerStats) data.playerStats = {};
+    if (!data.drafts) data.drafts = {};
     return { data: data };
   }
 
-  // pairs: [[nameX, nameY], ...], resultsMap: { name: {outcome, pom} }, sign: +1 apply / -1 reverse
+  // pairs: [[nameX, nameY], ...], resultsMap: { name: {outcome, score, pom} }, sign: +1 apply / -1 reverse
   function applyHeadToHeadDelta(pairs, resultsMap, sign, headToHead) {
     if (!pairs || !pairs.length) return;
     pairs.forEach(function (pair) {
@@ -386,17 +569,119 @@
     });
   }
 
-  async function submitScores() {
+  async function submitScores(localDraft) {
+    if (!unlocked) return;
     var note = document.getElementById("submitNote");
     note.textContent = "등록하는 중…";
 
     try {
       var fresh = await fetchLatestState();
-      if (!fresh || !fresh.data.latestDraft) {
+      if (!fresh) {
         note.textContent = "등록 실패 (최신 데이터를 불러오지 못했어요).";
         return;
       }
-      var draft = fresh.data.latestDraft;
+      var draftsMap = collectDrafts(fresh.data);
+      var draft = draftsMap[selectedYearMonth];
+      if (!draft) {
+        note.textContent = "등록 실패 (드래프트를 찾을 수 없어요).";
+        return;
+      }
+      var playerStats = fresh.data.playerStats || {};
+      var headToHead = fresh.data.headToHead || {};
+      var oldResults = draft.results || {};
+
+      // raw 데이터(승/패/무)만 이 페이지에서 관리한다 — POM은 별도 페이지 소관이므로
+      // 기존에 기록된 pom 플래그가 있다면 지우지 않고 그대로 들고 간다.
+      if (draft.scored && oldResults) {
+        Object.keys(oldResults).forEach(function (name) {
+          var r = oldResults[name];
+          var s = playerStats[name];
+          if (!s || !r.outcome) return;
+          if (r.outcome === "win") s.win = Math.max(0, s.win - 1);
+          else if (r.outcome === "loss") s.loss = Math.max(0, s.loss - 1);
+          else if (r.outcome === "draw") s.draw = Math.max(0, s.draw - 1);
+        });
+        applyHeadToHeadDelta(draft.pairs, oldResults, -1, headToHead);
+      }
+
+      var newResults = {};
+      draft.pairs.forEach(function (pair) {
+        var nameA = pair[0], nameB = pair[1];
+        var inputA = document.querySelector('input[name="score__' + encodeURIComponent(nameA) + '"]');
+        var inputB = document.querySelector('input[name="score__' + encodeURIComponent(nameB) + '"]');
+        if (!inputA || !inputB) return;
+        var a = inputA.value !== "" ? parseInt(inputA.value, 10) : null;
+        var b = inputB.value !== "" ? parseInt(inputB.value, 10) : null;
+        if (a === null || b === null || isNaN(a) || isNaN(b)) return;
+        var outcomeA, outcomeB;
+        if (a > b) { outcomeA = "win"; outcomeB = "loss"; }
+        else if (a < b) { outcomeA = "loss"; outcomeB = "win"; }
+        else { outcomeA = "draw"; outcomeB = "draw"; }
+        newResults[nameA] = { score: a, outcome: outcomeA };
+        newResults[nameB] = { score: b, outcome: outcomeB };
+
+        [[nameA, outcomeA], [nameB, outcomeB]].forEach(function (pairInfo) {
+          var name = pairInfo[0], outcome = pairInfo[1];
+          if (!playerStats[name]) playerStats[name] = { win: 0, loss: 0, draw: 0, pom: 0 };
+          if (outcome === "win") playerStats[name].win++;
+          else if (outcome === "loss") playerStats[name].loss++;
+          else if (outcome === "draw") playerStats[name].draw++;
+        });
+      });
+
+      // 이전에 기록돼 있던 pom 플래그는 이 페이지가 건드리지 않고 그대로 보존한다.
+      allMembers(draft).forEach(function (m) {
+        var old = oldResults[m.name];
+        if (old && old.pom) {
+          if (!newResults[m.name]) newResults[m.name] = {};
+          newResults[m.name].pom = true;
+        }
+      });
+
+      applyHeadToHeadDelta(draft.pairs, newResults, 1, headToHead);
+
+      draft.scored = Object.keys(newResults).some(function (name) { return newResults[name].outcome; });
+      draft.results = newResults;
+
+      fresh.data.drafts[selectedYearMonth] = draft;
+      fresh.data.playerStats = playerStats;
+      fresh.data.headToHead = headToHead;
+
+      var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fresh.data)
+      });
+
+      if (putRes.ok) {
+        window.location.href = "result.html?ym=" + encodeURIComponent(selectedYearMonth);
+      } else {
+        note.textContent = "등록 실패 (네트워크 오류).";
+      }
+    } catch (e) {
+      note.textContent = "등록 실패 (네트워크 오류).";
+    }
+  }
+
+  async function deleteMonth(yearMonth) {
+    if (!unlocked) return;
+    if (!window.confirm(yearMonth + " 데이터를 삭제할까요? 되돌릴 수 없어요.")) return;
+
+    var note = document.getElementById("submitNote");
+    note.textContent = "삭제하는 중…";
+
+    try {
+      var fresh = await fetchLatestState();
+      if (!fresh) {
+        note.textContent = "삭제 실패 (최신 데이터를 불러오지 못했어요).";
+        return;
+      }
+      var draftsMap = collectDrafts(fresh.data);
+      var draft = draftsMap[yearMonth];
+      if (!draft) {
+        note.textContent = "삭제 실패 (드래프트를 찾을 수 없어요).";
+        return;
+      }
       var playerStats = fresh.data.playerStats || {};
       var headToHead = fresh.data.headToHead || {};
 
@@ -404,44 +689,20 @@
         Object.keys(draft.results).forEach(function (name) {
           var r = draft.results[name];
           var s = playerStats[name];
-          if (!s) return;
+          if (!s || !r.outcome) return;
           if (r.outcome === "win") s.win = Math.max(0, s.win - 1);
           else if (r.outcome === "loss") s.loss = Math.max(0, s.loss - 1);
           else if (r.outcome === "draw") s.draw = Math.max(0, s.draw - 1);
-          if (r.pom) s.pom = Math.max(0, s.pom - 1);
         });
         applyHeadToHeadDelta(draft.pairs, draft.results, -1, headToHead);
       }
 
-      var newResults = {};
-      allMembers(draft).forEach(function (m) {
-        var groupName = "outcome__" + encodeURIComponent(m.name);
-        var checked = document.querySelector('input[name="' + groupName + '"]:checked');
-        if (!checked) return;
-        var outcome = checked.value;
-        if (!playerStats[m.name]) playerStats[m.name] = { win: 0, loss: 0, draw: 0, pom: 0 };
-        if (outcome === "win") playerStats[m.name].win++;
-        else if (outcome === "loss") playerStats[m.name].loss++;
-        else if (outcome === "draw") playerStats[m.name].draw++;
-        newResults[m.name] = { outcome: outcome, pom: false };
-      });
-
-      var pomChecked = document.querySelector('input[name="pom"]:checked');
-      var pomValue = pomChecked ? decodeURIComponent(pomChecked.value) : "";
-      if (pomValue) {
-        if (!playerStats[pomValue]) playerStats[pomValue] = { win: 0, loss: 0, draw: 0, pom: 0 };
-        playerStats[pomValue].pom++;
-        if (!newResults[pomValue]) newResults[pomValue] = { outcome: null, pom: true };
-        else newResults[pomValue].pom = true;
+      if (fresh.data.drafts) delete fresh.data.drafts[yearMonth];
+      if (fresh.data.latestDraft && fresh.data.latestDraft.yearMonth === yearMonth) {
+        fresh.data.latestDraft = null;
       }
-
-      applyHeadToHeadDelta(draft.pairs, newResults, 1, headToHead);
-
-      draft.scored = true;
-      draft.results = newResults;
       fresh.data.playerStats = playerStats;
       fresh.data.headToHead = headToHead;
-      fresh.data.latestDraft = draft;
 
       var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
         method: "PUT",
@@ -451,13 +712,15 @@
 
       if (putRes.ok) {
         stateData = fresh.data;
+        selectedYearMonth = null;
         reScoring = false;
-        render();
+        renderMonthPanel();
+        renderContent();
       } else {
-        note.textContent = "등록 실패 (네트워크 오류).";
+        note.textContent = "삭제 실패 (네트워크 오류).";
       }
     } catch (e) {
-      note.textContent = "등록 실패 (네트워크 오류).";
+      note.textContent = "삭제 실패 (네트워크 오류).";
     }
   }
 

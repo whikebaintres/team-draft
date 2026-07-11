@@ -728,10 +728,41 @@
 
   /* ---------- Result screen ---------- */
   .result-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     margin-bottom: 36px;
+  }
+  .round-card {
+    position: relative;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow-soft);
+    animation: card-drop 0.5s cubic-bezier(.2,.8,.3,1.05) both;
+  }
+  .round-label {
+    text-align: center; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 14px;
+  }
+  .round-match { display: flex; align-items: center; gap: 12px; }
+  .round-side {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    text-align: center; min-width: 0;
+  }
+  .round-side .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--side-color, var(--accent)); }
+  .round-side .name {
+    font-size: 0.98rem; font-weight: 700; color: var(--side-color, var(--ink));
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+  }
+  .round-side .team-tag { font-size: 0.72rem; color: var(--ink-faint); }
+  .round-vs { font-size: 0.78rem; font-weight: 800; color: var(--ink-faint); flex-shrink: 0; }
+  @media (max-width: 480px) {
+    .round-match { flex-direction: column; }
+    .round-vs { order: 2; }
   }
   .result-card {
     position: relative;
@@ -798,6 +829,7 @@
   .result-actions {
     display: flex;
     justify-content: center;
+    gap: 20px;
   }
 
   .bgm-control {
@@ -938,6 +970,7 @@
     <div class="result-grid" id="resultGrid"></div>
     <div class="result-actions">
       <button class="link-btn" id="restartBtn">새로 시작하기 ›</button>
+      <button class="link-btn" id="viewResultBtn" hidden>결과 확인하기 ›</button>
     </div>
   </section>
 </div>
@@ -1007,19 +1040,21 @@
     updateHostStatus("공유하는 중…");
     try {
       var getRes = await fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
-      var current = { playerStats: {}, headToHead: {}, latestDraft: null };
+      var current = { playerStats: {}, headToHead: {}, drafts: {}, latestDraft: null };
       if (getRes.ok) {
         var data = await getRes.json();
         if (data) current = data;
       }
+      if (!current.drafts) current.drafts = {};
       var pairs = [];
       for (var i = 0; i + 1 < state.order.length; i += 2) {
         pairs.push([state.order[i], state.order[i + 1]]);
       }
-      current.latestDraft = {
+      var yearMonth = currentYearMonthLabel();
+      var draftRecord = {
         runId: "d" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
         createdAt: Date.now(),
-        yearMonth: currentYearMonthLabel(),
+        yearMonth: yearMonth,
         scored: false,
         teams: state.teams.map(function (t) {
           return { name: t.name, color: t.color, colorName: t.colorName, members: t.members.slice() };
@@ -1027,6 +1062,10 @@
         pairs: pairs,
         results: null
       };
+      // drafts는 년월별로 누적 보관되어 admin.html에서 과거 월도 선택해 채점/수정할 수 있다.
+      // latestDraft는 이전 버전과의 호환을 위해 계속 함께 기록한다 (admin.html의 마이그레이션 폴백용).
+      current.drafts[yearMonth] = draftRecord;
+      current.latestDraft = draftRecord;
       var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -1633,29 +1672,45 @@
   function finishDraft() {
     var grid = $("resultGrid");
     grid.innerHTML = "";
-    state.teams.forEach(function (team, i) {
+    var memberTeam = {};
+    state.teams.forEach(function (team) {
+      team.members.forEach(function (m) { memberTeam[m] = team; });
+    });
+    var pairs = [];
+    for (var i = 0; i + 1 < state.order.length; i += 2) {
+      pairs.push([state.order[i], state.order[i + 1]]);
+    }
+    pairs.forEach(function (pair, idx) {
+      var nameA = pair[0], nameB = pair[1];
+      var teamA = memberTeam[nameA] || {};
+      var teamB = memberTeam[nameB] || {};
       var card = document.createElement("div");
-      card.className = "result-card";
-      card.style.setProperty("--card-color", team.color);
-      card.style.animationDelay = (i * 0.08) + "s";
-      var ol = document.createElement("ol");
-      team.members.forEach(function (m, mi) {
-        var li = document.createElement("li");
-        li.innerHTML = '<span class="n">' + (mi + 1).toString().padStart(2, "0") + '</span><span>' + escapeHtml(m) + '</span>';
-        ol.appendChild(li);
-      });
+      card.className = "round-card";
+      card.style.animationDelay = (idx * 0.08) + "s";
       card.innerHTML =
-        '<div class="r-name">' + escapeHtml(team.name) + '</div>' +
-        '<div class="r-sub">' + team.members.length + ' MEMBERS · <span class="swatch">' + escapeHtml(team.colorName) + '</span></div>';
-      card.appendChild(ol);
+        '<p class="round-label">' + escapeHtml(positionLabel(idx, pairs.length)) + '</p>' +
+        '<div class="round-match">' +
+        roundSideHtml(nameA, teamA) +
+        '<span class="round-vs">VS</span>' +
+        roundSideHtml(nameB, teamB) +
+        '</div>';
       grid.appendChild(card);
     });
     showScreen("result");
+    var viewResultBtn = $("viewResultBtn");
     if (state.isTest) {
       updateHostStatus("테스트 모드라 기록되지 않았어요.");
+      viewResultBtn.hidden = true;
     } else {
       publishLatestDraft();
+      viewResultBtn.hidden = false;
     }
+  }
+
+  function roundSideHtml(name, team) {
+    return '<div class="round-side" style="--side-color:' + (team.color || "var(--accent)") + '">' +
+      '<span class="dot"></span><span class="name">' + escapeHtml(name) + '</span>' +
+      '<span class="team-tag">' + escapeHtml(team.name || "") + '</span></div>';
   }
 
   $("startBtn").addEventListener("click", startDraft);
@@ -1665,6 +1720,9 @@
     stopBgm();
     $("bgmControl").hidden = true;
     setRecordMode("official");
+  });
+  $("viewResultBtn").addEventListener("click", function () {
+    window.location.href = "result.html";
   });
 
   syncRosterList();
