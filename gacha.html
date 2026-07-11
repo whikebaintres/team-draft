@@ -755,7 +755,7 @@
   }
   .round-side .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--side-color, var(--accent)); }
   .round-side .name {
-    font-size: 0.98rem; font-weight: 700; color: var(--side-color, var(--ink));
+    font-size: 1.35rem; font-weight: 800; color: var(--side-color, var(--ink));
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
   }
   .round-side .team-tag { font-size: 0.72rem; color: var(--ink-faint); }
@@ -1087,10 +1087,9 @@
     });
   }
 
-  // ---------- SFX (카드 확정 / 상대전적 공개 효과음) ----------
+  // ---------- SFX (카드 확정 / 상대전적 공개 효과음) — 볼륨은 BGM 볼륨 슬라이더와 동기화됨 ----------
   var cardConfirmSfx = new Audio("FFXIV_Confirm.mp3");
   cardConfirmSfx.preload = "auto";
-  cardConfirmSfx.volume = 0.5;
 
   function playCardConfirmSfx() {
     try {
@@ -1101,7 +1100,6 @@
 
   var h2hRevealSfx = new Audio("charge.mp3");
   h2hRevealSfx.preload = "auto";
-  h2hRevealSfx.volume = 0.5;
 
   function playH2hRevealSfx() {
     try {
@@ -1165,8 +1163,17 @@
   function updateBgmToggleIcon() {
     $("bgmToggle").textContent = bgmMuted ? "🔇" : "🔊";
   }
+
+  // 효과음(카드 확정/상대전적 공개) 볼륨을 BGM 볼륨 슬라이더 값(0~100)에 맞춰 함께 조정한다.
+  function updateSfxVolume() {
+    var v = bgmVolume / 100;
+    cardConfirmSfx.volume = v;
+    h2hRevealSfx.volume = v;
+  }
+
   updateBgmToggleIcon();
   $("bgmVolume").value = bgmVolume;
+  updateSfxVolume();
 
   $("bgmToggle").addEventListener("click", function () {
     bgmMuted = !bgmMuted;
@@ -1181,6 +1188,7 @@
     bgmVolume = parseInt(this.value, 10);
     localStorage.setItem("gachaBgmVolume", String(bgmVolume));
     if (ytReady && ytPlayerObj) ytPlayerObj.setVolume(bgmVolume);
+    updateSfxVolume();
   });
 
   function showScreen(name) {

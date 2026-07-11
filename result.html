@@ -364,6 +364,18 @@
     }
   }
 
+  // ---------- SFX (POM 확정 효과음) ----------
+  var pomRevealSfx = new Audio("FFXIV_Level_Up.mp3");
+  pomRevealSfx.preload = "auto";
+  pomRevealSfx.volume = 0.5;
+
+  function playPomRevealSfx() {
+    try {
+      pomRevealSfx.currentTime = 0;
+      pomRevealSfx.play().catch(function () {});
+    } catch (e) {}
+  }
+
   var stateData = null; // { playerStats, headToHead, drafts, latestDraft }
   var selectedYearMonth = getQueryYearMonth();
   var initialSelectionApplied = false;
@@ -563,9 +575,43 @@
 
     if (draft.finalResult) {
       renderFinalReveal(draft, draft.finalResult.criteria, draft.finalResult.teamName, draft.finalResult.pomName, false);
+      ensureHistoryArchived(draft); // 예전에 확정만 되고 history가 없던 경우를 보정 (비동기, 화면은 안 기다림)
     } else {
       runSlotAndDecide(draft);
     }
+  }
+
+  // POM까지 이미 확정된 드래프트인데 history에 아직 없으면 뒤늦게라도 채워 넣는다.
+  async function ensureHistoryArchived(draft) {
+    try {
+      var res = await fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) return;
+      var fresh = await res.json();
+      if (!fresh || (fresh.history && fresh.history[selectedYearMonth])) return;
+
+      var draftsMap = collectDrafts(fresh);
+      var freshDraft = draftsMap[selectedYearMonth];
+      if (!freshDraft || !freshDraft.finalResult) return;
+
+      if (!fresh.history) fresh.history = {};
+      fresh.history[selectedYearMonth] = {
+        runId: freshDraft.runId,
+        yearMonth: freshDraft.yearMonth,
+        createdAt: freshDraft.createdAt,
+        teams: freshDraft.teams,
+        pairs: freshDraft.pairs,
+        results: freshDraft.results,
+        finalResult: freshDraft.finalResult,
+        archivedAt: Date.now()
+      };
+
+      var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fresh)
+      });
+      if (putRes.ok) stateData = fresh;
+    } catch (e) {}
   }
 
   function closeFinalModal() {
@@ -635,7 +681,10 @@
     }).join("");
     document.getElementById("finalPomName").textContent = pomName || "-";
 
-    if (celebrate) fireConfetti();
+    if (celebrate) {
+      fireConfetti();
+      playPomRevealSfx();
+    }
   }
 
   async function finalizeAndSave(draft, criteria) {
@@ -643,7 +692,7 @@
     var winnerRow = pickWinnerTeam(summary, criteria);
     var pomName = pickPomName(draft, winnerRow.team);
 
-    renderFinalReveal(draft, criteria, winnerRow.team.name, pomName, false);
+    renderFinalReveal(draft, criteria, winnerRow.team.name, pomName, true);
 
     try {
       var res = await fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
@@ -655,6 +704,8 @@
       var freshDraft = draftsMap[selectedYearMonth];
       if (!freshDraft) return;
 
+      var needsPut = false;
+
       if (freshDraft.finalResult) {
         // 다른 사람이 그 사이 먼저 확정함 — 이 클라이언트가 방금 뽑은 결과는 버리고 그 결과를 그대로 반영
         draft.finalResult = freshDraft.finalResult;
@@ -662,34 +713,55 @@
         if (fr.criteria !== criteria || fr.teamName !== winnerRow.team.name || fr.pomName !== pomName) {
           renderFinalReveal(draft, fr.criteria, fr.teamName, fr.pomName, false);
         }
-        return;
-      }
+      } else {
+        if (!freshDraft.results) freshDraft.results = {};
+        if (!freshDraft.results[pomName]) freshDraft.results[pomName] = {};
+        freshDraft.results[pomName].pom = true;
+        freshDraft.finalResult = { criteria: criteria, teamName: winnerRow.team.name, pomName: pomName, decidedAt: Date.now() };
 
-      if (!freshDraft.results) freshDraft.results = {};
-      if (!freshDraft.results[pomName]) freshDraft.results[pomName] = {};
-      freshDraft.results[pomName].pom = true;
-      freshDraft.finalResult = { criteria: criteria, teamName: winnerRow.team.name, pomName: pomName, decidedAt: Date.now() };
+        var playerStats = fresh.playerStats || {};
+        if (!playerStats[pomName]) playerStats[pomName] = { win: 0, loss: 0, draw: 0, pom: 0 };
+        playerStats[pomName].pom = (playerStats[pomName].pom || 0) + 1;
+        fresh.playerStats = playerStats;
 
-      var playerStats = fresh.playerStats || {};
-      if (!playerStats[pomName]) playerStats[pomName] = { win: 0, loss: 0, draw: 0, pom: 0 };
-      playerStats[pomName].pom = (playerStats[pomName].pom || 0) + 1;
+        if (!fresh.drafts) fresh.drafts = {};
+        fresh.drafts[selectedYearMonth] = freshDraft;
 
-      if (!fresh.drafts) fresh.drafts = {};
-      fresh.drafts[selectedYearMonth] = freshDraft;
-      fresh.playerStats = playerStats;
-
-      var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fresh)
-      });
-      if (putRes.ok) {
-        stateData = fresh;
         // 같은 세션에서 다시 열었을 때 재추첨 없이 바로 확정 결과가 보이도록 원본 draft도 동기화
         draft.finalResult = freshDraft.finalResult;
         if (!draft.results) draft.results = {};
         if (!draft.results[pomName]) draft.results[pomName] = {};
         draft.results[pomName].pom = true;
+
+        needsPut = true;
+      }
+
+      // POM까지 확정된 드래프트는 admin.html에서 그 달 데이터를 나중에 지우더라도 사라지지 않도록
+      // 별도의 history 스냅샷으로 영구 보관한다 (이미 보관돼 있으면 다시 쓰지 않음).
+      if (!fresh.history) fresh.history = {};
+      if (!fresh.history[selectedYearMonth]) {
+        fresh.history[selectedYearMonth] = {
+          runId: freshDraft.runId,
+          yearMonth: freshDraft.yearMonth,
+          createdAt: freshDraft.createdAt,
+          teams: freshDraft.teams,
+          pairs: freshDraft.pairs,
+          results: freshDraft.results,
+          finalResult: freshDraft.finalResult,
+          archivedAt: Date.now()
+        };
+        needsPut = true;
+      }
+
+      if (needsPut) {
+        var putRes = await fetch(FIREBASE_URL + STATE_PATH, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(fresh)
+        });
+        if (putRes.ok) stateData = fresh;
+      } else {
+        stateData = fresh;
       }
     } catch (e) {
       // 저장 실패해도 화면에는 이미 결과가 표시되어 있음 — 다음 방문 시 재확정 시도됨
