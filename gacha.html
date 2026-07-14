@@ -194,15 +194,7 @@
   .screen.active { display: block; }
 
   /* ---------- Setup screen ---------- */
-  .setup-grid {
-    display: grid;
-    grid-template-columns: 1.35fr 1fr;
-    gap: 20px;
-    margin-bottom: 28px;
-  }
-  @media (max-width: 720px) {
-    .setup-grid { grid-template-columns: 1fr; }
-  }
+  #screen-setup > .panel { margin-bottom: 28px; }
 
   .panel {
     background: var(--glass-bg);
@@ -334,36 +326,6 @@
     padding: 6px 0;
   }
   .link-btn:hover { color: var(--accent-hover); text-decoration: underline; }
-
-  .stepper {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 4px;
-  }
-  .stepper button {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 1px solid var(--line);
-    background: var(--panel-2);
-    color: var(--ink);
-    font-size: 1.2rem;
-    font-weight: 500;
-    display: grid;
-    place-items: center;
-    line-height: 1;
-  }
-  .stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
-  .stepper button:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
-  .stepper .num {
-    font-size: 2.2rem;
-    font-weight: 700;
-    min-width: 44px;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
 
   .rule-text {
     font-size: 0.95rem;
@@ -923,29 +885,17 @@
 
   <!-- ================= SETUP ================= -->
   <section class="screen active" id="screen-setup">
-    <div class="setup-grid">
-      <div class="panel">
-        <h2>참가자 <span class="count" id="rosterCount">0</span></h2>
-        <p class="hint">드래프트에 참여할 인원을 추가하거나 삭제하세요.</p>
-        <div class="roster-list" id="rosterList"></div>
-        <div class="add-row">
-          <input id="nameInput" type="text" placeholder="이름 입력 후 Enter" maxlength="12" />
-          <button class="btn" id="addBtn">추가하기</button>
-        </div>
+    <div class="panel">
+      <div class="mode-switch" role="radiogroup" aria-label="기록 모드">
+        <button type="button" class="mode-btn active" id="modeOfficialBtn" data-mode="official" role="radio" aria-checked="true"></button>
+        <button type="button" class="mode-btn" id="modeTestBtn" data-mode="test" role="radio" aria-checked="false">테스트</button>
       </div>
-
-      <div class="panel">
-        <div class="mode-switch" role="radiogroup" aria-label="기록 모드">
-          <button type="button" class="mode-btn active" id="modeOfficialBtn" data-mode="official" role="radio" aria-checked="true"></button>
-          <button type="button" class="mode-btn" id="modeTestBtn" data-mode="test" role="radio" aria-checked="false">테스트</button>
-        </div>
-        <h2>팀 구성</h2>
-        <p class="hint">최소 2팀, 최대 8팀까지 구성할 수 있습니다. 팀 이름은 드래프트가 시작되면 공개됩니다.</p>
-        <div class="stepper">
-          <button id="teamMinus" aria-label="팀 수 감소">–</button>
-          <span class="num" id="teamCountNum">2</span>
-          <button id="teamPlus" aria-label="팀 수 증가">+</button>
-        </div>
+      <h2>참가자 <span class="count" id="rosterCount">0</span></h2>
+      <p class="hint">드래프트에 참여할 인원을 추가하거나 삭제하세요. 팀은 2팀으로 나뉩니다.</p>
+      <div class="roster-list" id="rosterList"></div>
+      <div class="add-row">
+        <input id="nameInput" type="text" placeholder="이름 입력 후 Enter" maxlength="12" />
+        <button class="btn" id="addBtn">추가하기</button>
       </div>
     </div>
 
@@ -1288,7 +1238,6 @@
     }
 
     $("rosterCount").textContent = state.roster.length;
-    clampTeamCount();
   }
 
   function addParticipant() {
@@ -1306,27 +1255,19 @@
     validateStart();
   }
 
-  function clampTeamCount() {
-    var maxAllowed = Math.min(8, Math.max(2, state.roster.length || 2));
-    if (state.teamCount > maxAllowed) state.teamCount = maxAllowed;
-    if (state.teamCount < 2) state.teamCount = 2;
-    $("teamCountNum").textContent = state.teamCount;
-    $("teamMinus").disabled = state.teamCount <= 2;
-    $("teamPlus").disabled = state.teamCount >= 8 || state.teamCount >= state.roster.length;
-  }
-
   function validateStart() {
     var btn = $("startBtn");
     var note = $("startNote");
-    if (state.roster.length < state.teamCount) {
-      btn.disabled = true;
-      note.textContent = "참가자가 팀 수보다 적어요. (참가자 " + state.roster.length + "명 / 팀 " + state.teamCount + "개)";
-    } else if (state.roster.length === 0) {
+    // 팀은 항상 2팀 고정 → 최소 2명 필요
+    if (state.roster.length === 0) {
       btn.disabled = true;
       note.textContent = "참가자를 먼저 추가해주세요.";
+    } else if (state.roster.length < 2) {
+      btn.disabled = true;
+      note.textContent = "2팀으로 나누려면 참가자가 2명 이상이어야 해요.";
     } else {
       btn.disabled = false;
-      note.textContent = "참가자 " + state.roster.length + "명 · " + state.teamCount + "팀으로 준비 완료";
+      note.textContent = "참가자 " + state.roster.length + "명 · 2팀으로 준비 완료";
     }
   }
 
@@ -1334,15 +1275,6 @@
   $("nameInput").addEventListener("keydown", function (e) {
     if (e.key === "Enter") addParticipant();
   });
-  $("teamMinus").addEventListener("click", function () {
-    state.teamCount = Math.max(2, state.teamCount - 1);
-    clampTeamCount(); validateStart();
-  });
-  $("teamPlus").addEventListener("click", function () {
-    state.teamCount = Math.min(8, state.teamCount + 1);
-    clampTeamCount(); validateStart();
-  });
-
   $("modeOfficialBtn").textContent = currentYearMonthLabel();
 
   function setRecordMode(mode) {
