@@ -775,6 +775,8 @@
       }
       requestAnimationFrame(teeterFrame);
     }
+
+    requestAnimationFrame(frame); // 시퀀스 시작 (빠른 스핀 → 슬로우모션 → teeter → settle)
   }
 
   function fireConfetti() {
