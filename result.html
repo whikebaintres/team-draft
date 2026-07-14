@@ -244,21 +244,48 @@
   }
 
   .slot-stage { padding: 8px 0 4px; }
+  /* 세로 릴 슬롯 (하스스톤 매칭 연출 참고) */
   .slot-window {
-    display: inline-block; min-width: 180px; padding: 22px 20px;
-    border-radius: 16px; background: var(--bg-alt); border: 1px solid var(--line);
+    position: relative; width: 220px; max-width: 100%; height: 68px; margin: 0 auto;
+    overflow: hidden; border-radius: 16px;
+    background: var(--bg-alt); border: 1px solid var(--line);
   }
-  .slot-value {
-    font-size: 1.5rem; font-weight: 800; color: var(--accent);
-    display: inline-block;
+  /* 스크롤되는 항목 뒤에 고정된 중앙 하이라이트 */
+  .slot-center {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    border-top: 1px solid transparent; border-bottom: 1px solid transparent;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  /* 위아래 페이드로 릴이 통 안에서 흘러가는 느낌을 준다 */
+  .slot-reel-mask {
+    position: absolute; inset: 0; z-index: 2;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
+  }
+  .slot-reel { will-change: transform; }
+  .slot-item {
+    height: 68px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 800; color: var(--ink-dim);
+    transition: color 0.3s ease, transform 0.3s ease;
+  }
+  .slot-item.active { color: var(--accent); }
+  /* 슬로우모션(막판 간발의 차) 구간 — 통 전체에 은은한 긴장감 글로우 */
+  .slot-stage.slowmo .slot-window {
+    box-shadow: 0 0 0 1px var(--accent), 0 0 30px -6px var(--accent);
+    transition: box-shadow 0.5s ease;
+  }
+  .slot-stage.settled .slot-center {
+    background: var(--accent-soft);
+    border-top-color: var(--accent); border-bottom-color: var(--accent);
   }
   .slot-stage.settled .slot-window {
-    background: var(--accent-soft); border-color: var(--accent);
+    border-color: var(--accent);
     animation: slot-settle 0.5s ease;
   }
+  .slot-stage.settled .slot-item.active { transform: scale(1.12); }
   @keyframes slot-settle {
     0% { transform: scale(1); }
-    40% { transform: scale(1.14); }
+    45% { transform: scale(1.08); }
     100% { transform: scale(1); }
   }
 
@@ -555,7 +582,10 @@
       '<div class="modal-box">' +
       '<button class="modal-close" id="modalCloseBtn" aria-label="닫기">×</button>' +
       '<h2 class="modal-title">최종 결과</h2>' +
-      '<div class="slot-stage" id="slotStage"><div class="slot-window"><span class="slot-value" id="slotValue">누적 점수</span></div></div>' +
+      '<div class="slot-stage" id="slotStage"><div class="slot-window">' +
+      '<div class="slot-center"></div>' +
+      '<div class="slot-reel-mask"><div class="slot-reel" id="slotReel"></div></div>' +
+      '</div></div>' +
       '<div class="final-reveal" id="finalReveal" hidden>' +
       '<p class="final-criteria" id="finalCriteriaLabel"></p>' +
       '<p class="final-team" id="finalTeamName"></p>' +
@@ -620,30 +650,131 @@
   }
 
   function runSlotAndDecide(draft) {
-    var slotValueEl = document.getElementById("slotValue");
-    var slotStageEl = document.getElementById("slotStage");
-    var options = ["누적 점수", "승점"];
-    var start = Date.now();
-    var duration = 5000;
+    var reel = document.getElementById("slotReel");
+    var stage = document.getElementById("slotStage");
+    if (!reel || !stage) return;
 
-    function tick() {
+    var options = ["누적 점수", "승점"];
+    var criteria = Math.random() < 0.5 ? "totalScore" : "winPoints";
+    var targetOpt = criteria === "totalScore" ? 0 : 1;
+
+    // 반복되는 릴을 채운다 (짝수 인덱스=누적 점수, 홀수=승점).
+    // 위→아래로 흘러가다 착지하도록, 위쪽에서 시작해 targetOpt 칸으로 감속하며 내려온다.
+    var LOOPS = 40; // 착지 전까지 지나갈 칸 수
+    // 당첨 칸 위·아래로 이웃 칸이 남도록 위쪽에 2칸 패딩 (짝수라 패리티 유지 → 텍스트 동일)
+    var finalIndex = targetOpt + 2; // 중앙에 멈출 칸
+    var TOTAL = finalIndex + LOOPS + 2;
+    var itemsHtml = "";
+    for (var i = 0; i < TOTAL; i++) {
+      itemsHtml += '<div class="slot-item">' + options[i % 2] + '</div>';
+    }
+    reel.innerHTML = itemsHtml;
+
+    var items = reel.children;
+    var ITEM_H = items[0].offsetHeight || 68;
+    var endY = -finalIndex * ITEM_H;              // 최종 위치 (finalIndex 칸이 중앙)
+    var startY = -(finalIndex + LOOPS) * ITEM_H;  // 시작 위치 (더 위쪽)
+    // 이번 결착의 연출 유형을 무작위로 정한다 (핵심: 예측 방지).
+    //  - dwellOnWinner=true  → 슬로우모션이 '이기는 옵션'에 멈춰 머물다 그대로 확정 (보인 값 = 결과)
+    //  - dwellOnWinner=false → 슬로우모션이 '지는 옵션'에 멈춰 머물다 막판에 승자로 뒤집힘 (보인 값 ≠ 결과)
+    // 착지 지점(endY=실제 승자)은 어느 쪽이든 항상 정확하다. 무작위로 바뀌는 건 "감속해 멈추는 옵션"뿐이라,
+    // "슬로우모션에 뜬 값의 반대가 답"이라는 예측이 더는 통하지 않는다.
+    var dwellOnWinner = Math.random() < 0.5;
+    // hoverY: 5초 스핀이 감속해 멈추는(그리고 머무는) 지점. offset 0=승자 중앙, offset -1=패자 중앙
+    var hoverY = endY + (dwellOnWinner ? 0 : -1) * ITEM_H;
+    // creepEndY: 슬로우모션(3s)이 끝나는 = teeter가 시작되는 지점
+    var creepEndY = endY + (dwellOnWinner ? 0.3 : -0.5) * ITEM_H;
+    reel.style.transform = "translateY(" + startY + "px)";
+
+    function settle() {
+      reel.style.transform = "translateY(" + endY + "px)";
+      reel.style.filter = "none";
+      stage.classList.remove("slowmo");
+      if (items[finalIndex]) items[finalIndex].classList.add("active");
+      stage.classList.add("settled");
+      fireConfetti();
+      setTimeout(function () {
+        if (document.getElementById("finalModalOverlay")) finalizeAndSave(draft, criteria);
+      }, 650);
+    }
+
+    var reduce = false;
+    try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    if (reduce) { settle(); return; }
+
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+    function easeInOutSine(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
+    function linear(t) { return t; }
+
+    // 각 구간: [시작Y, 끝Y, 지속(ms), 이징, 모션블러 여부]
+    // ① 빠른 스핀(5s) → dwell 옵션에서 감속 정지  ② 멈칫(그 옵션에 머무름)
+    // ③ 슬로우모션(3s)으로 teeter 시작점까지 슬며시 이동  → 이후 teeter로 결착
+    var segs = [
+      [startY, hoverY, 5000, easeOutCubic, true],
+      [hoverY, hoverY, 400, linear, false],
+      [hoverY, creepEndY, 3000, easeInOutSine, false]
+    ];
+
+    var segIndex = 0;
+    var segStart = performance.now();
+
+    function frame(now) {
       if (!document.getElementById("finalModalOverlay")) return; // 모달이 닫혔으면 중단
-      var elapsed = Date.now() - start;
-      slotValueEl.textContent = options[Math.floor(Math.random() * 2)];
-      if (elapsed < duration) {
-        var delay = 60 + (elapsed / duration) * 340;
-        setTimeout(tick, delay);
+      var seg = segs[segIndex];
+      var t = Math.min(1, (now - segStart) / seg[2]);
+      var y = seg[0] + (seg[1] - seg[0]) * seg[3](t);
+      reel.style.transform = "translateY(" + y + "px)";
+      if (seg[4]) {
+        var speed = 1 - t; // 빠른 스핀 구간에서만 모션 블러
+        reel.style.filter = speed > 0.12 ? "blur(" + (speed * 2.6).toFixed(2) + "px)" : "none";
       } else {
-        var criteria = Math.random() < 0.5 ? "totalScore" : "winPoints";
-        slotValueEl.textContent = criteria === "totalScore" ? "누적 점수" : "승점";
-        slotStageEl.classList.add("settled");
-        fireConfetti();
-        setTimeout(function () {
-          if (document.getElementById("finalModalOverlay")) finalizeAndSave(draft, criteria);
-        }, 600);
+        reel.style.filter = "none";
+      }
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else if (segIndex < segs.length - 1) {
+        segIndex++;
+        segStart = now;
+        if (segIndex === 1) stage.classList.add("slowmo"); // 슬로우모션 진입 → 글로우
+        requestAnimationFrame(frame);
+      } else {
+        runTeeter(); // 반반 경계에서 최종 진동 시작
       }
     }
-    tick();
+
+    // teeter: creepEndY에서 시작해 endY(=승자, offset 0)로 수렴하는 왕복 진동.
+    // offs: endY 기준 오프셋(칸). |offset|>0.5면 지는 옵션이, <0.5면 이기는 옵션이 중앙을 차지.
+    // dwell 유형에 따라 시작점·파형이 달라진다:
+    //   - confirm: 승자 근처(+0.3)에서 시작해 지는 옵션은 아주 잠깐만 힐끗 → 그대로 승자 확정
+    //   - flip:    패자(-0.5)에서 시작해 막판까지 지는 옵션에 크게 걸렸다 근소하게 승자로 뒤집힘
+    function runTeeter() {
+      var offs = dwellOnWinner
+        ? [0.30, 0.62, -0.18, 0.22, -0.08, 0]
+        : [-0.50, -0.85, 0.42, -0.70, 0.16, 0];
+      var durs = [320, 450, 440, 320, 230];
+      for (var d = 0; d < durs.length; d++) durs[d] += Math.round((Math.random() - 0.5) * 80);
+
+      var segIdx = 0;
+      var segT0 = performance.now();
+      function ease(t) { return -(Math.cos(Math.PI * t) - 1) / 2; } // easeInOutSine
+      function teeterFrame(now) {
+        if (!document.getElementById("finalModalOverlay")) return;
+        var t = Math.min(1, (now - segT0) / durs[segIdx]);
+        var from = offs[segIdx], to = offs[segIdx + 1];
+        var o = from + (to - from) * ease(t);
+        reel.style.transform = "translateY(" + (endY + o * ITEM_H) + "px)";
+        if (t < 1) {
+          requestAnimationFrame(teeterFrame);
+        } else if (segIdx < durs.length - 1) {
+          segIdx++;
+          segT0 = now;
+          requestAnimationFrame(teeterFrame);
+        } else {
+          settle();
+        }
+      }
+      requestAnimationFrame(teeterFrame);
+    }
   }
 
   function fireConfetti() {
