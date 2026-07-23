@@ -955,7 +955,8 @@
     teams: [],
     order: [],
     pickIndex: 0,
-    isTest: false
+    isTest: false,
+    screen: "setup"
   };
 
   function currentYearMonthLabel() {
@@ -979,6 +980,57 @@
   // ---------- Shared state (Firebase Realtime Database, open read/write — no token needed) ----------
   var FIREBASE_URL = "https://team-draft-1ab3a-default-rtdb.firebaseio.com";
   var STATE_PATH = "/gachaState.json";
+  var MEMBERS_PATH = "/members.json";
+  var PHOTOS_PATH = "/memberPhotos.json";
+  var STORED_MARKER = "@stored"; // photo가 이 값이면 실제 이미지는 /memberPhotos에 있다
+
+  // 참가자 명단과 포트레이트는 admin-members.html에서 관리한다.
+  // 아래 DEFAULT_ROSTER / PLAYER_IMAGES는 회원 목록을 못 불러왔을 때의 폴백일 뿐이다.
+  var rosterTouched = false;
+
+  function loadMembers() {
+    fetch(FIREBASE_URL + MEMBERS_PATH + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (members) {
+        if (!members) return null;
+        var names = Object.keys(members).filter(function (n) {
+          return members[n] && members[n].active !== false;
+        }).sort(function (a, b) {
+          var oa = members[a].order, ob = members[b].order;
+          if (typeof oa === "number" && typeof ob === "number" && oa !== ob) return oa - ob;
+          return a.localeCompare(b, "ko");
+        });
+        if (!names.length) return null;
+
+        names.forEach(function (n) {
+          var photo = members[n].photo;
+          if (photo && photo !== STORED_MARKER) PLAYER_IMAGES[n] = photo;
+        });
+
+        // 참가자가 직접 손대기 전(=기본 명단 그대로)일 때만 회원 목록으로 교체한다.
+        if (!rosterTouched && state.screen === "setup") {
+          state.roster = names;
+          syncRosterList();
+          validateStart();
+        }
+
+        var needsPhotos = names.some(function (n) { return members[n].photo === STORED_MARKER; });
+        return needsPhotos ? names : null;
+      })
+      .then(function (names) {
+        if (!names) return;
+        // 업로드된 사진(data URL)은 용량이 커서 필요한 경우에만 따로 받아온다.
+        return fetch(FIREBASE_URL + PHOTOS_PATH + "?t=" + Date.now(), { cache: "no-store" })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function (photos) {
+            if (!photos) return;
+            names.forEach(function (n) {
+              if (photos[n]) PLAYER_IMAGES[n] = photos[n];
+            });
+          });
+      })
+      .catch(function () {});
+  }
 
   function loadPlayerStats() {
     fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
@@ -1152,6 +1204,7 @@
   });
 
   function showScreen(name) {
+    state.screen = name;
     document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("active"); });
     $("screen-" + name).classList.add("active");
 
@@ -1190,6 +1243,7 @@
     del.addEventListener("click", function () {
       var idx = state.roster.indexOf(name);
       if (idx !== -1) state.roster.splice(idx, 1);
+      rosterTouched = true; // 손댄 명단을 회원 목록 로드가 덮어쓰지 않도록
       syncRosterList();
       validateStart();
     });
@@ -1250,6 +1304,7 @@
       return;
     }
     state.roster.push(name);
+    rosterTouched = true; // 손댄 명단을 회원 목록 로드가 덮어쓰지 않도록
     input.value = "";
     syncRosterList();
     validateStart();
@@ -1701,5 +1756,6 @@
   syncRosterList();
   validateStart();
   loadPlayerStats();
+  loadMembers();
 })();
 </script>

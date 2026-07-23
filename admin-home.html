@@ -1,0 +1,344 @@
+<title>관리자 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --bg-alt: #f5f5f7;
+    --panel: #f5f5f7;
+    --panel-2: #ffffff;
+    --line: #d2d2d7;
+    --ink: #1d1d1f;
+    --ink-dim: #6e6e73;
+    --ink-faint: #86868b;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.08);
+    --danger: #ff3b30;
+    --danger-soft: rgba(255, 59, 48, 0.1);
+    --good: #248a3d;
+    --good-soft: rgba(36, 138, 61, 0.1);
+    --warn: #b9791a;
+    --warn-soft: rgba(185, 121, 26, 0.1);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px -16px rgba(0, 0, 0, 0.14);
+    --wash:
+      radial-gradient(1100px circle at 12% -10%, rgba(0, 149, 217, 0.16), transparent 55%),
+      radial-gradient(900px circle at 92% 4%, rgba(45, 200, 180, 0.14), transparent 55%),
+      radial-gradient(1200px circle at 50% 110%, rgba(100, 170, 255, 0.10), transparent 60%);
+    --glass-bg: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.7);
+    --font-body: "Roboto", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #000000; --bg-alt: #1d1d1f; --panel: #1d1d1f; --panel-2: #161617; --line: #38383a;
+      --ink: #f5f5f7; --ink-dim: #a1a1a6; --ink-faint: #6e6e73;
+      --accent: #2997ff; --accent-hover: #52aeff; --accent-soft: rgba(41, 151, 255, 0.14);
+      --danger: #ff453a; --danger-soft: rgba(255, 69, 58, 0.16);
+      --good: #32d74b; --good-soft: rgba(50, 215, 75, 0.14);
+      --warn: #ffb340; --warn-soft: rgba(255, 179, 64, 0.14);
+      --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 32px -16px rgba(0, 0, 0, 0.6);
+      --wash:
+        radial-gradient(1100px circle at 12% -10%, rgba(0, 120, 200, 0.32), transparent 55%),
+        radial-gradient(900px circle at 92% 4%, rgba(30, 190, 165, 0.26), transparent 55%),
+        radial-gradient(1200px circle at 50% 110%, rgba(60, 140, 255, 0.18), transparent 60%);
+      --glass-bg: rgba(30, 30, 32, 0.55); --glass-border: rgba(255, 255, 255, 0.09);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #000000; --bg-alt: #1d1d1f; --panel: #1d1d1f; --panel-2: #161617; --line: #38383a;
+    --ink: #f5f5f7; --ink-dim: #a1a1a6; --ink-faint: #6e6e73;
+    --accent: #2997ff; --accent-hover: #52aeff; --accent-soft: rgba(41, 151, 255, 0.14);
+    --danger: #ff453a; --danger-soft: rgba(255, 69, 58, 0.16);
+    --good: #32d74b; --good-soft: rgba(50, 215, 75, 0.14);
+    --warn: #ffb340; --warn-soft: rgba(255, 179, 64, 0.14);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 32px -16px rgba(0, 0, 0, 0.6);
+    --wash:
+      radial-gradient(1100px circle at 12% -10%, rgba(0, 120, 200, 0.32), transparent 55%),
+      radial-gradient(900px circle at 92% 4%, rgba(30, 190, 165, 0.26), transparent 55%),
+      radial-gradient(1200px circle at 50% 110%, rgba(60, 140, 255, 0.18), transparent 60%);
+    --glass-bg: rgba(30, 30, 32, 0.55); --glass-border: rgba(255, 255, 255, 0.09);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #ffffff; --bg-alt: #f5f5f7; --panel: #f5f5f7; --panel-2: #ffffff; --line: #d2d2d7;
+    --ink: #1d1d1f; --ink-dim: #6e6e73; --ink-faint: #86868b;
+    --accent: #0071e3; --accent-hover: #0077ed; --accent-soft: rgba(0, 113, 227, 0.08);
+    --danger: #ff3b30; --danger-soft: rgba(255, 59, 48, 0.1);
+    --good: #248a3d; --good-soft: rgba(36, 138, 61, 0.1);
+    --warn: #b9791a; --warn-soft: rgba(185, 121, 26, 0.1);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px -16px rgba(0, 0, 0, 0.14);
+    --wash:
+      radial-gradient(1100px circle at 12% -10%, rgba(0, 149, 217, 0.16), transparent 55%),
+      radial-gradient(900px circle at 92% 4%, rgba(45, 200, 180, 0.14), transparent 55%),
+      radial-gradient(1200px circle at 50% 110%, rgba(100, 170, 255, 0.10), transparent 60%);
+    --glass-bg: rgba(255, 255, 255, 0.6); --glass-border: rgba(255, 255, 255, 0.7);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background-color: var(--bg);
+    background-image: var(--wash);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: var(--font-body); cursor: pointer; }
+  button:focus-visible, input:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  .hero { text-align: center; max-width: 600px; margin: 0 auto 36px; }
+  .hero .eyebrow {
+    display: block; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(1.8rem, 4.5vw, 2.5rem); font-weight: 700; letter-spacing: -0.015em;
+    line-height: 1.2; margin: 0 0 12px; text-wrap: balance;
+  }
+  .hero p { font-size: 1rem; line-height: 1.55; color: var(--ink-dim); margin: 0; text-wrap: balance; }
+
+  .panel {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 26px;
+    box-shadow: var(--shadow-soft);
+  }
+  .panel + .panel { margin-top: 16px; }
+
+  /* 비밀번호 잠금 패널 (admin.html과 같은 sessionStorage 키를 공유) */
+  .lock-panel { display: flex; flex-direction: column; gap: 10px; }
+  .lock-panel.unlocked { flex-direction: row; align-items: center; justify-content: space-between; padding: 16px 26px; gap: 12px; }
+  .select-label { font-size: 0.78rem; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.02em; }
+  .password-row { display: flex; gap: 8px; }
+  .password-input {
+    flex: 1; font-family: var(--font-body); font-size: 0.95rem; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  }
+  .lock-status { font-size: 0.82rem; color: var(--ink-faint); }
+  .lock-status.good { color: var(--good); font-weight: 700; }
+  .lock-status.danger { color: var(--danger); font-weight: 600; }
+
+  .btn {
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+    border-radius: 10px; padding: 10px 18px; font-weight: 600; font-size: 0.9rem;
+    transition: background 0.15s, transform 0.1s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg-alt); }
+  .btn:active { transform: scale(0.97); }
+
+  /* 3개 어드민 진입 카드 */
+  .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+  .nav-card {
+    display: flex; flex-direction: column; gap: 10px;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px; padding: 24px 22px;
+    box-shadow: var(--shadow-soft);
+    text-decoration: none; color: inherit;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+  .nav-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 22px 40px -20px rgba(0, 0, 0, 0.3);
+  }
+  .nav-card .icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent-soft); color: var(--accent);
+  }
+  .nav-card .icon svg { width: 22px; height: 22px; }
+  .nav-card h2 { font-size: 1.05rem; font-weight: 700; margin: 4px 0 0; letter-spacing: -0.01em; }
+  .nav-card p { font-size: 0.86rem; line-height: 1.5; color: var(--ink-dim); margin: 0; flex: 1; }
+  .nav-card .go { font-size: 0.84rem; font-weight: 600; color: var(--accent); }
+
+  /* 요약 통계 */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-cell { text-align: center; }
+  .stat-cell .value { display: block; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-cell .value.small { font-size: 1.05rem; }
+  .stat-cell .label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--ink-faint); margin-top: 4px; }
+  .panel-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 16px; text-align: center; }
+
+  .foot-links { display: flex; justify-content: center; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
+  .foot-links a { color: var(--accent); font-size: 0.9rem; font-weight: 500; text-decoration: none; }
+  .foot-links a:hover { text-decoration: underline; }
+
+  @media (max-width: 720px) {
+    .nav-grid { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <span class="eyebrow">E스포츠 동호회</span>
+    <h1>관리자 대시보드</h1>
+    <p>점수 등록 · 회원 관리 · 회원 데이터 세 가지 관리 페이지로 이동할 수 있어요.</p>
+  </div>
+
+  <div id="lockPanel"></div>
+
+  <div class="nav-grid">
+    <a class="nav-card" href="admin.html">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+      </span>
+      <h2>점수 등록</h2>
+      <p>년월별 대진표를 불러와 라운드별 점수를 입력하면 승/패/무가 자동 기록돼요.</p>
+      <span class="go">열기 →</span>
+    </a>
+
+    <a class="nav-card" href="admin-members.html">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+          <path d="M19 8v6M22 11h-6" />
+        </svg>
+      </span>
+      <h2>회원 관리</h2>
+      <p>신규 회원을 사진과 함께 등록하고, 등록된 회원의 이름·사진을 수정하거나 삭제해요.</p>
+      <span class="go">열기 →</span>
+    </a>
+
+    <a class="nav-card" href="admin-stats.html">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18" /><path d="M7 15v-4M12 15V7M17 15v-6" />
+        </svg>
+      </span>
+      <h2>회원 데이터</h2>
+      <p>회원별 승/패/무·POM 누적 전적을 확인하고, 필요하면 직접 값을 고쳐요.</p>
+      <span class="go">열기 →</span>
+    </a>
+  </div>
+
+  <div class="panel" style="margin-top:16px">
+    <p class="panel-title">현재 데이터</p>
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-cell"><span class="value" id="statMembers">–</span><span class="label">등록 회원</span></div>
+      <div class="stat-cell"><span class="value" id="statDrafts">–</span><span class="label">드래프트</span></div>
+      <div class="stat-cell"><span class="value" id="statScored">–</span><span class="label">채점 완료</span></div>
+      <div class="stat-cell"><span class="value small" id="statLatest">–</span><span class="label">최근 년월</span></div>
+    </div>
+  </div>
+
+  <div class="foot-links">
+    <a href="gacha.html">드래프트 페이지 →</a>
+    <a href="result.html">결과 확인 페이지 →</a>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var FIREBASE_URL = "https://team-draft-1ab3a-default-rtdb.firebaseio.com";
+  var STATE_PATH = "/gachaState.json";
+  var MEMBERS_PATH = "/members.json";
+  var EDIT_PASSWORD = "daft";
+
+  var lockPanelEl = document.getElementById("lockPanel");
+
+  // admin.html / admin-members.html / admin-stats.html이 같은 세션 키를 공유하므로
+  // 여기서 한 번 풀면 탭이 열려 있는 동안 세 페이지 모두 잠금이 풀린 상태가 된다.
+  var unlocked = false;
+  try { unlocked = sessionStorage.getItem("adminUnlocked") === "1"; } catch (e) {}
+
+  function renderLockPanel() {
+    if (unlocked) {
+      lockPanelEl.innerHTML =
+        '<div class="panel lock-panel unlocked">' +
+        '<span class="lock-status good">🔓 관리자 잠금 해제됨 — 세 페이지 모두 수정 가능</span>' +
+        '<button class="btn" id="lockBtn">다시 잠그기</button></div>';
+      document.getElementById("lockBtn").addEventListener("click", function () {
+        unlocked = false;
+        try { sessionStorage.removeItem("adminUnlocked"); } catch (e) {}
+        renderLockPanel();
+      });
+      return;
+    }
+    lockPanelEl.innerHTML =
+      '<div class="panel lock-panel">' +
+      '<label class="select-label" for="pwInput">관리자 비밀번호</label>' +
+      '<div class="password-row">' +
+      '<input type="password" id="pwInput" class="password-input" placeholder="비밀번호 입력" autocomplete="off" />' +
+      '<button class="btn" id="pwBtn">잠금 해제</button>' +
+      '</div><span class="lock-status" id="pwNote">조회는 누구나 가능하고, 등록·수정·삭제만 비밀번호가 필요해요.</span></div>';
+
+    document.getElementById("pwBtn").addEventListener("click", tryUnlock);
+    document.getElementById("pwInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") tryUnlock();
+    });
+  }
+
+  function tryUnlock() {
+    var input = document.getElementById("pwInput");
+    var note = document.getElementById("pwNote");
+    if (input.value === EDIT_PASSWORD) {
+      unlocked = true;
+      try { sessionStorage.setItem("adminUnlocked", "1"); } catch (e) {}
+      renderLockPanel();
+    } else {
+      note.textContent = "비밀번호가 올바르지 않아요.";
+      note.className = "lock-status danger";
+      input.value = "";
+      input.focus();
+    }
+  }
+
+  function setText(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function loadSummary() {
+    Promise.all([
+      fetch(FIREBASE_URL + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+      fetch(FIREBASE_URL + MEMBERS_PATH + "?t=" + Date.now(), { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    ]).then(function (res) {
+      var state = res[0] || {};
+      var members = res[1] || {};
+
+      var activeCount = Object.keys(members).filter(function (k) {
+        return members[k] && members[k].active !== false;
+      }).length;
+      setText("statMembers", activeCount ? activeCount + "명" : "0명");
+
+      var drafts = state.drafts || {};
+      var keys = Object.keys(drafts);
+      setText("statDrafts", keys.length + "건");
+      setText("statScored", keys.filter(function (k) { return drafts[k] && drafts[k].scored; }).length + "건");
+
+      keys.sort(function (a, b) { return (drafts[b].createdAt || 0) - (drafts[a].createdAt || 0); });
+      setText("statLatest", keys.length ? keys[0] : "없음");
+    });
+  }
+
+  renderLockPanel();
+  loadSummary();
+})();
+</script>

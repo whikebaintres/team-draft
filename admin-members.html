@@ -1,0 +1,926 @@
+<title>회원 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --bg-alt: #f5f5f7;
+    --panel: #f5f5f7;
+    --panel-2: #ffffff;
+    --line: #d2d2d7;
+    --ink: #1d1d1f;
+    --ink-dim: #6e6e73;
+    --ink-faint: #86868b;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.08);
+    --danger: #ff3b30;
+    --danger-soft: rgba(255, 59, 48, 0.1);
+    --good: #248a3d;
+    --good-soft: rgba(36, 138, 61, 0.1);
+    --warn: #b9791a;
+    --warn-soft: rgba(185, 121, 26, 0.1);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px -16px rgba(0, 0, 0, 0.14);
+    --wash:
+      radial-gradient(1100px circle at 12% -10%, rgba(0, 149, 217, 0.16), transparent 55%),
+      radial-gradient(900px circle at 92% 4%, rgba(45, 200, 180, 0.14), transparent 55%),
+      radial-gradient(1200px circle at 50% 110%, rgba(100, 170, 255, 0.10), transparent 60%);
+    --glass-bg: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.7);
+    --font-body: "Roboto", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #000000; --bg-alt: #1d1d1f; --panel: #1d1d1f; --panel-2: #161617; --line: #38383a;
+      --ink: #f5f5f7; --ink-dim: #a1a1a6; --ink-faint: #6e6e73;
+      --accent: #2997ff; --accent-hover: #52aeff; --accent-soft: rgba(41, 151, 255, 0.14);
+      --danger: #ff453a; --danger-soft: rgba(255, 69, 58, 0.16);
+      --good: #32d74b; --good-soft: rgba(50, 215, 75, 0.14);
+      --warn: #ffb340; --warn-soft: rgba(255, 179, 64, 0.14);
+      --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 32px -16px rgba(0, 0, 0, 0.6);
+      --wash:
+        radial-gradient(1100px circle at 12% -10%, rgba(0, 120, 200, 0.32), transparent 55%),
+        radial-gradient(900px circle at 92% 4%, rgba(30, 190, 165, 0.26), transparent 55%),
+        radial-gradient(1200px circle at 50% 110%, rgba(60, 140, 255, 0.18), transparent 60%);
+      --glass-bg: rgba(30, 30, 32, 0.55); --glass-border: rgba(255, 255, 255, 0.09);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #000000; --bg-alt: #1d1d1f; --panel: #1d1d1f; --panel-2: #161617; --line: #38383a;
+    --ink: #f5f5f7; --ink-dim: #a1a1a6; --ink-faint: #6e6e73;
+    --accent: #2997ff; --accent-hover: #52aeff; --accent-soft: rgba(41, 151, 255, 0.14);
+    --danger: #ff453a; --danger-soft: rgba(255, 69, 58, 0.16);
+    --good: #32d74b; --good-soft: rgba(50, 215, 75, 0.14);
+    --warn: #ffb340; --warn-soft: rgba(255, 179, 64, 0.14);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 32px -16px rgba(0, 0, 0, 0.6);
+    --wash:
+      radial-gradient(1100px circle at 12% -10%, rgba(0, 120, 200, 0.32), transparent 55%),
+      radial-gradient(900px circle at 92% 4%, rgba(30, 190, 165, 0.26), transparent 55%),
+      radial-gradient(1200px circle at 50% 110%, rgba(60, 140, 255, 0.18), transparent 60%);
+    --glass-bg: rgba(30, 30, 32, 0.55); --glass-border: rgba(255, 255, 255, 0.09);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #ffffff; --bg-alt: #f5f5f7; --panel: #f5f5f7; --panel-2: #ffffff; --line: #d2d2d7;
+    --ink: #1d1d1f; --ink-dim: #6e6e73; --ink-faint: #86868b;
+    --accent: #0071e3; --accent-hover: #0077ed; --accent-soft: rgba(0, 113, 227, 0.08);
+    --danger: #ff3b30; --danger-soft: rgba(255, 59, 48, 0.1);
+    --good: #248a3d; --good-soft: rgba(36, 138, 61, 0.1);
+    --warn: #b9791a; --warn-soft: rgba(185, 121, 26, 0.1);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px -16px rgba(0, 0, 0, 0.14);
+    --wash:
+      radial-gradient(1100px circle at 12% -10%, rgba(0, 149, 217, 0.16), transparent 55%),
+      radial-gradient(900px circle at 92% 4%, rgba(45, 200, 180, 0.14), transparent 55%),
+      radial-gradient(1200px circle at 50% 110%, rgba(100, 170, 255, 0.10), transparent 60%);
+    --glass-bg: rgba(255, 255, 255, 0.6); --glass-border: rgba(255, 255, 255, 0.7);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body {
+    min-height: 100vh;
+    background-color: var(--bg);
+    background-image: var(--wash);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: var(--font-body); cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  .breadcrumb { text-align: center; margin-bottom: 18px; }
+  .breadcrumb a { color: var(--accent); font-size: 0.88rem; font-weight: 500; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  .hero { text-align: center; max-width: 600px; margin: 0 auto 36px; }
+  .hero .eyebrow {
+    display: block; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(1.8rem, 4.5vw, 2.5rem); font-weight: 700; letter-spacing: -0.015em;
+    line-height: 1.2; margin: 0 0 12px; text-wrap: balance;
+  }
+  .hero p { font-size: 1rem; line-height: 1.55; color: var(--ink-dim); margin: 0; text-wrap: balance; }
+
+  .panel {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 26px;
+    box-shadow: var(--shadow-soft);
+  }
+  .panel + .panel { margin-top: 16px; }
+  .panel-title {
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 18px;
+  }
+  .panel-title .count { color: var(--accent); }
+
+  .lock-panel { display: flex; flex-direction: column; gap: 10px; }
+  .lock-panel.unlocked { flex-direction: row; align-items: center; padding: 16px 26px; }
+  .select-label { font-size: 0.78rem; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.02em; }
+  .password-row { display: flex; gap: 8px; }
+  .password-input {
+    flex: 1; font-family: var(--font-body); font-size: 0.95rem; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  }
+  .lock-status { font-size: 0.82rem; color: var(--ink-faint); }
+  .lock-status.good { color: var(--good); font-weight: 700; }
+  .lock-status.danger { color: var(--danger); font-weight: 600; }
+
+  .btn {
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+    border-radius: 10px; padding: 10px 18px; font-weight: 600; font-size: 0.9rem;
+    transition: background 0.15s, transform 0.1s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg-alt); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn-primary:disabled { background: var(--panel); border-color: var(--line); color: var(--ink-faint); }
+  .btn-danger { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: var(--danger); border-color: var(--danger); color: #ffffff; }
+  .btn-danger:disabled { background: var(--panel); border-color: var(--line); color: var(--ink-faint); }
+  .btn-sm { padding: 6px 12px; font-size: 0.82rem; border-radius: 8px; }
+
+  /* ---- 신규 등록 폼 ---- */
+  .create-row { display: flex; gap: 22px; align-items: flex-start; }
+  .create-fields { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .text-input {
+    font-family: var(--font-body); font-size: 0.95rem; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    width: 100%;
+  }
+  .text-input:disabled { opacity: 0.5; cursor: not-allowed; }
+  .field-hint { font-size: 0.8rem; color: var(--ink-faint); line-height: 1.5; }
+  .field-hint.danger { color: var(--danger); font-weight: 600; }
+  .field-hint.good { color: var(--good); font-weight: 600; }
+
+  /* 원형 사진 드롭존 — gacha 카드에서 보이는 것과 같은 원형 크롭 미리보기 */
+  .photo-drop {
+    width: 128px; height: 128px; flex-shrink: 0;
+    border-radius: 50%; border: 2px dashed var(--line);
+    background: var(--panel-2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    color: var(--ink-faint); font-size: 0.76rem; font-weight: 600; text-align: center;
+    cursor: pointer; overflow: hidden; position: relative;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .photo-drop:hover, .photo-drop.dragover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .photo-drop.has-photo { border-style: solid; border-color: var(--accent); }
+  .photo-drop img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-drop svg { width: 26px; height: 26px; }
+  .file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .photo-side { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .photo-clear { background: none; border: none; color: var(--danger); font-size: 0.8rem; font-weight: 600; padding: 2px 6px; }
+  .photo-clear:hover { text-decoration: underline; }
+
+  /* ---- 회원 목록 ---- */
+  .member-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .member-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+  }
+  .member-card.inactive { opacity: 0.55; }
+  .member-card.editing { flex-direction: column; align-items: stretch; gap: 12px; }
+  .avatar {
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    background: var(--bg-alt); display: flex; align-items: center; justify-content: center;
+    color: var(--ink-faint); font-weight: 700; font-size: 1rem;
+    border: 1px solid var(--line);
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .member-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .member-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .member-meta { font-size: 0.8rem; color: var(--ink-dim); }
+  .member-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .tag {
+    display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    background: var(--warn-soft); color: var(--warn); margin-left: 6px; vertical-align: middle;
+  }
+
+  .edit-head { display: flex; align-items: center; gap: 14px; }
+  .edit-grid { display: flex; flex-direction: column; gap: 10px; }
+  .edit-row { display: flex; gap: 8px; align-items: center; }
+  .edit-row label { font-size: 0.8rem; font-weight: 600; color: var(--ink-faint); width: 62px; flex-shrink: 0; }
+  .select-input {
+    font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+  }
+  .edit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .edit-note { font-size: 0.8rem; color: var(--ink-faint); line-height: 1.5; }
+  .edit-note.danger { color: var(--danger); font-weight: 600; }
+
+  .empty-state { text-align: center; padding: 36px 20px; color: var(--ink-dim); }
+  .empty-state p { margin: 0 0 4px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg);
+    padding: 12px 20px; border-radius: 999px; font-size: 0.88rem; font-weight: 600;
+    box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.5); z-index: 50;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+  @media (max-width: 640px) {
+    .member-grid { grid-template-columns: 1fr; }
+    .create-row { flex-direction: column; align-items: center; }
+    .create-fields { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="breadcrumb"><a href="admin-home.html">← 관리자 대시보드</a></div>
+
+  <div class="hero">
+    <span class="eyebrow">E스포츠 동호회</span>
+    <h1>회원 관리</h1>
+    <p>여기에 등록한 이름과 사진이 드래프트 페이지의 참가자 명단과 선수 카드에 그대로 사용돼요.</p>
+  </div>
+
+  <div id="lockPanel"></div>
+
+  <div class="panel">
+    <p class="panel-title">새 회원 등록</p>
+    <div class="create-row">
+      <div class="photo-side">
+        <input type="file" id="newPhotoInput" class="file-input" accept="image/*" />
+        <label class="photo-drop" id="newPhotoDrop" for="newPhotoInput" tabindex="0" role="button" aria-label="사진 선택">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M17 8l-5-5-5 5" /><path d="M12 3v13" />
+          </svg>
+          <span>사진 선택</span>
+        </label>
+        <button type="button" class="photo-clear" id="newPhotoClear" hidden>사진 지우기</button>
+      </div>
+      <div class="create-fields">
+        <label class="select-label" for="newNameInput">이름</label>
+        <input type="text" id="newNameInput" class="text-input" placeholder="이름 입력 (최대 12자)" maxlength="12" autocomplete="off" />
+        <span class="field-hint" id="createHint">사진은 정사각형으로 잘려 원형으로 표시돼요. 사진 없이 등록하면 기본 실루엣이 사용됩니다.</span>
+        <div><button class="btn btn-primary" id="createBtn">회원 등록하기</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="panel-title">등록된 회원 <span class="count" id="memberCount">–</span></p>
+    <div id="memberList"><div class="empty-state"><p>불러오는 중…</p></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var FIREBASE_URL = "https://team-draft-1ab3a-default-rtdb.firebaseio.com";
+  var STATE_PATH = "/gachaState.json";
+  var MEMBERS_PATH = "/members.json";
+  var PHOTOS_PATH = "/memberPhotos.json";
+  var EDIT_PASSWORD = "daft";
+
+  // 업로드 사진 규격: gacha 카드가 CSS로 원형 마스킹하므로 투명도가 필요 없다 →
+  // 정사각 크롭 후 320px JPEG로 줄여 data URL로 보관한다 (장당 20~35KB 수준).
+  var PHOTO_SIZE = 320;
+  var PHOTO_QUALITY = 0.85;
+  var STORED_MARKER = "@stored"; // photo 필드가 이 값이면 실제 이미지는 /memberPhotos에 있다는 뜻
+
+  // 이 페이지가 생기기 전부터 gacha.html에 하드코딩돼 있던 11명.
+  // /members가 비어 있을 때(=최초 1회) 이 명단으로 자동 시드한다.
+  var LEGACY_MEMBERS = [
+    { name: "고재형", photo: "players/gojaehyung.png" },
+    { name: "지한규", photo: "players/jihankyu.png" },
+    { name: "이예은", photo: "players/leeyeeun.png" },
+    { name: "편한슬", photo: "players/pyeonhanseul.png" },
+    { name: "이도현", photo: "players/leedohyun.png" },
+    { name: "조이진", photo: "players/joijin.png" },
+    { name: "유다현", photo: "players/yudahyun.png" },
+    { name: "임준", photo: "players/imjun.png" },
+    { name: "김탁우", photo: "players/kimtakwoo.png" },
+    { name: "원종훈", photo: "players/wonjonghoon.png" },
+    { name: "임별", photo: "players/imbyeol.png" }
+  ];
+
+  var lockPanelEl = document.getElementById("lockPanel");
+  var listEl = document.getElementById("memberList");
+  var countEl = document.getElementById("memberCount");
+  var toastEl = document.getElementById("toast");
+
+  var members = {};     // { 이름: { name, photo, active, order, createdAt, updatedAt } }
+  var photos = {};      // { 이름: dataURL }
+  var playerStats = {}; // 전적 요약 표시용 (이 페이지에서 수정하지 않음)
+  var editingName = null;
+  var newPhotoData = null;
+  var busy = false;
+
+  var unlocked = false;
+  try { unlocked = sessionStorage.getItem("adminUnlocked") === "1"; } catch (e) {}
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function $(id) { return document.getElementById(id); }
+
+  var toastTimer = null;
+  function toast(message) {
+    toastEl.textContent = message;
+    toastEl.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2600);
+  }
+
+  // Firebase RTDB 키로 쓸 수 없는 문자 + 앞뒤 공백을 걸러낸다.
+  function validateName(name, allowExisting) {
+    if (!name) return "이름을 입력해주세요.";
+    if (name.length > 12) return "이름은 12자까지 가능해요.";
+    if (/[.$#\[\]\/]/.test(name)) return "이름에 . $ # [ ] / 는 쓸 수 없어요.";
+    if (members[name] && name !== allowExisting) return "이미 등록된 이름이에요.";
+    return null;
+  }
+
+  function resolvePhoto(name) {
+    var m = members[name];
+    if (!m || !m.photo) return null;
+    return m.photo === STORED_MARKER ? (photos[name] || null) : m.photo;
+  }
+
+  function statLine(name) {
+    var s = playerStats[name];
+    if (!s) return "전적 기록 없음";
+    var win = s.win || 0, loss = s.loss || 0, draw = s.draw || 0, pom = s.pom || 0;
+    var played = win + loss + draw;
+    if (!played && !pom) return "전적 기록 없음";
+    var text = played + "전 " + win + "승 " + loss + "패";
+    if (draw) text += " " + draw + "무";
+    if (pom) text += " · POM " + pom;
+    return text;
+  }
+
+  function sortedNames() {
+    return Object.keys(members).sort(function (a, b) {
+      var oa = members[a].order, ob = members[b].order;
+      if (typeof oa === "number" && typeof ob === "number" && oa !== ob) return oa - ob;
+      return a.localeCompare(b, "ko");
+    });
+  }
+
+  // ---------- 이미지 → 정사각 크롭 data URL ----------
+  function fileToSquareDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file.type || file.type.indexOf("image/") !== 0) {
+        reject(new Error("이미지 파일만 올릴 수 있어요."));
+        return;
+      }
+      var reader = new FileReader();
+      reader.onerror = function () { reject(new Error("파일을 읽지 못했어요.")); };
+      reader.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(new Error("이미지를 열지 못했어요.")); };
+        img.onload = function () {
+          var side = Math.min(img.width, img.height);
+          var sx = Math.round((img.width - side) / 2);
+          var sy = Math.round((img.height - side) / 2);
+          var canvas = document.createElement("canvas");
+          canvas.width = PHOTO_SIZE;
+          canvas.height = PHOTO_SIZE;
+          var ctx = canvas.getContext("2d");
+          // 투명 PNG가 들어와도 JPEG로 나가므로 흰 배경을 먼저 깔아준다.
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, PHOTO_SIZE, PHOTO_SIZE);
+          ctx.drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIZE, PHOTO_SIZE);
+          resolve(canvas.toDataURL("image/jpeg", PHOTO_QUALITY));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 사진 드롭존 하나를 파일 선택 + 드래그앤드롭으로 동작하게 묶는다.
+  function bindPhotoDrop(dropEl, inputEl, onPicked) {
+    function handle(file) {
+      if (!file) return;
+      fileToSquareDataUrl(file).then(onPicked).catch(function (err) { toast(err.message); });
+    }
+    inputEl.addEventListener("change", function () {
+      handle(inputEl.files && inputEl.files[0]);
+      inputEl.value = "";
+    });
+    dropEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputEl.click(); }
+    });
+    ["dragenter", "dragover"].forEach(function (type) {
+      dropEl.addEventListener(type, function (e) { e.preventDefault(); dropEl.classList.add("dragover"); });
+    });
+    ["dragleave", "drop"].forEach(function (type) {
+      dropEl.addEventListener(type, function (e) { e.preventDefault(); dropEl.classList.remove("dragover"); });
+    });
+    dropEl.addEventListener("drop", function (e) {
+      handle(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+    });
+  }
+
+  function paintDrop(dropEl, clearBtn, dataUrl) {
+    if (dataUrl) {
+      dropEl.classList.add("has-photo");
+      dropEl.innerHTML = '<img src="' + dataUrl + '" alt="미리보기" />';
+      if (clearBtn) clearBtn.hidden = false;
+    } else {
+      dropEl.classList.remove("has-photo");
+      dropEl.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M17 8l-5-5-5 5" /><path d="M12 3v13" /></svg>' +
+        '<span>사진 선택</span>';
+      if (clearBtn) clearBtn.hidden = true;
+    }
+  }
+
+  // ---------- 로드 ----------
+  function fetchJson(path) {
+    return fetch(FIREBASE_URL + path + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+  async function loadAll() {
+    var res = await Promise.all([
+      fetchJson(MEMBERS_PATH),
+      fetchJson(PHOTOS_PATH),
+      fetchJson("/gachaState/playerStats.json")
+    ]);
+    members = res[0] || {};
+    photos = res[1] || {};
+    playerStats = res[2] || {};
+
+    if (!Object.keys(members).length) {
+      await seedLegacyMembers();
+    }
+    renderList();
+  }
+
+  // gacha.html에 하드코딩돼 있던 기존 11명을 그대로 회원 목록으로 옮긴다.
+  // 사진은 레포에 있는 파일 경로를 그대로 참조해서 data URL 없이 가볍게 유지한다.
+  async function seedLegacyMembers() {
+    var seed = {};
+    LEGACY_MEMBERS.forEach(function (m, i) {
+      seed[m.name] = {
+        name: m.name,
+        photo: m.photo,
+        active: true,
+        order: i,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+    });
+    var ok = await putJson(MEMBERS_PATH, seed);
+    if (ok) {
+      members = seed;
+      toast("기존 11명을 회원 목록으로 불러왔어요.");
+    } else {
+      toast("기존 회원 불러오기에 실패했어요. 새로고침해보세요.");
+    }
+  }
+
+  async function putJson(path, body) {
+    try {
+      var res = await fetch(FIREBASE_URL + path, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function deleteJson(path) {
+    try {
+      var res = await fetch(FIREBASE_URL + path, { method: "DELETE" });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function memberPath(name) { return "/members/" + encodeURIComponent(name) + ".json"; }
+  function photoPath(name) { return "/memberPhotos/" + encodeURIComponent(name) + ".json"; }
+
+  // ---------- 렌더 ----------
+  function renderLockPanel() {
+    if (unlocked) {
+      lockPanelEl.innerHTML = '<div class="panel lock-panel unlocked"><span class="lock-status good">🔓 회원 등록·수정 가능</span></div>';
+      return;
+    }
+    lockPanelEl.innerHTML =
+      '<div class="panel lock-panel">' +
+      '<label class="select-label" for="pwInput">관리자 비밀번호</label>' +
+      '<div class="password-row">' +
+      '<input type="password" id="pwInput" class="password-input" placeholder="비밀번호 입력" autocomplete="off" />' +
+      '<button class="btn" id="pwBtn">잠금 해제</button>' +
+      '</div><span class="lock-status" id="pwNote">비밀번호를 입력해야 회원을 등록·수정·삭제할 수 있어요.</span></div>';
+
+    $("pwBtn").addEventListener("click", tryUnlock);
+    $("pwInput").addEventListener("keydown", function (e) { if (e.key === "Enter") tryUnlock(); });
+  }
+
+  function tryUnlock() {
+    var input = $("pwInput");
+    var note = $("pwNote");
+    if (input.value === EDIT_PASSWORD) {
+      unlocked = true;
+      try { sessionStorage.setItem("adminUnlocked", "1"); } catch (e) {}
+      renderLockPanel();
+      syncEnabled();
+      renderList();
+    } else {
+      note.textContent = "비밀번호가 올바르지 않아요.";
+      note.className = "lock-status danger";
+      input.value = "";
+      input.focus();
+    }
+  }
+
+  function syncEnabled() {
+    $("newNameInput").disabled = !unlocked || busy;
+    $("createBtn").disabled = !unlocked || busy;
+    $("newPhotoDrop").style.pointerEvents = unlocked && !busy ? "" : "none";
+    $("newPhotoDrop").style.opacity = unlocked ? "" : "0.5";
+  }
+
+  function renderList() {
+    var names = sortedNames();
+    countEl.textContent = names.length + "명";
+
+    if (!names.length) {
+      listEl.innerHTML = '<div class="empty-state"><p>등록된 회원이 없어요.</p><p>위에서 첫 회원을 등록해주세요.</p></div>';
+      return;
+    }
+
+    var html = '<div class="member-grid">';
+    names.forEach(function (name) {
+      html += (name === editingName) ? editCardHtml(name) : viewCardHtml(name);
+    });
+    html += '</div>';
+    listEl.innerHTML = html;
+
+    if (editingName) bindEditCard(editingName);
+  }
+
+  function avatarHtml(name) {
+    var src = resolvePhoto(name);
+    if (src) return '<div class="avatar"><img src="' + escapeHtml(src) + '" alt="' + escapeHtml(name) + '" /></div>';
+    return '<div class="avatar">' + escapeHtml(name.slice(0, 1)) + '</div>';
+  }
+
+  function viewCardHtml(name) {
+    var m = members[name];
+    var inactive = m.active === false;
+    return '<div class="member-card' + (inactive ? " inactive" : "") + '">' +
+      avatarHtml(name) +
+      '<div class="member-body">' +
+      '<span class="member-name">' + escapeHtml(name) + (inactive ? '<span class="tag">숨김</span>' : "") + '</span>' +
+      '<span class="member-meta">' + escapeHtml(statLine(name)) + '</span>' +
+      '</div>' +
+      '<div class="member-actions">' +
+      '<button class="btn btn-sm" data-edit="' + escapeHtml(name) + '"' + (unlocked ? "" : " disabled") + '>수정</button>' +
+      '</div></div>';
+  }
+
+  function editCardHtml(name) {
+    var m = members[name];
+    var src = resolvePhoto(name);
+    return '<div class="member-card editing">' +
+      '<div class="edit-head">' +
+      '<div class="photo-side">' +
+      '<input type="file" id="editPhotoInput" class="file-input" accept="image/*" />' +
+      '<label class="photo-drop' + (src ? " has-photo" : "") + '" id="editPhotoDrop" for="editPhotoInput" tabindex="0" role="button" aria-label="사진 변경" style="width:72px;height:72px">' +
+      (src ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(name) + '" />' : '<span>사진 선택</span>') +
+      '</label>' +
+      '<button type="button" class="photo-clear" id="editPhotoClear"' + (src ? "" : " hidden") + '>사진 지우기</button>' +
+      '</div>' +
+      '<div class="edit-grid" style="flex:1">' +
+      '<div class="edit-row"><label for="editNameInput">이름</label>' +
+      '<input type="text" id="editNameInput" class="text-input" maxlength="12" value="' + escapeHtml(name) + '" autocomplete="off" /></div>' +
+      '<div class="edit-row"><label for="editActiveSelect">명단</label>' +
+      '<select id="editActiveSelect" class="select-input">' +
+      '<option value="1"' + (m.active === false ? "" : " selected") + '>드래프트 기본 명단에 포함</option>' +
+      '<option value="0"' + (m.active === false ? " selected" : "") + '>숨김 (명단에서 제외)</option>' +
+      '</select></div>' +
+      '</div></div>' +
+      '<span class="edit-note" id="editNote">이름을 바꾸면 지금까지의 전적·상대전적·드래프트 기록의 이름도 함께 바뀌어요.</span>' +
+      '<div class="edit-actions">' +
+      '<button class="btn btn-primary btn-sm" id="editSaveBtn">저장</button>' +
+      '<button class="btn btn-sm" id="editCancelBtn">취소</button>' +
+      '<button class="btn btn-danger btn-sm" id="editDeleteBtn" style="margin-left:auto">회원 삭제</button>' +
+      '</div></div>';
+  }
+
+  var editPhotoData = undefined; // undefined = 변경 없음, null = 삭제, string = 새 사진
+
+  function bindEditCard(name) {
+    editPhotoData = undefined;
+    var dropEl = $("editPhotoDrop");
+    var inputEl = $("editPhotoInput");
+    var clearBtn = $("editPhotoClear");
+
+    bindPhotoDrop(dropEl, inputEl, function (dataUrl) {
+      editPhotoData = dataUrl;
+      paintDrop(dropEl, clearBtn, dataUrl);
+    });
+    clearBtn.addEventListener("click", function () {
+      editPhotoData = null;
+      paintDrop(dropEl, clearBtn, null);
+    });
+
+    $("editCancelBtn").addEventListener("click", function () {
+      editingName = null;
+      renderList();
+    });
+    $("editSaveBtn").addEventListener("click", function () { saveEdit(name); });
+    $("editDeleteBtn").addEventListener("click", function () { deleteMember(name); });
+    $("editNameInput").focus();
+  }
+
+  listEl.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-edit]");
+    if (!btn || btn.disabled) return;
+    editingName = btn.getAttribute("data-edit");
+    renderList();
+  });
+
+  // ---------- 등록 ----------
+  async function createMember() {
+    if (!unlocked || busy) return;
+    var input = $("newNameInput");
+    var hint = $("createHint");
+    var name = input.value.trim();
+    var err = validateName(name, null);
+    if (err) {
+      hint.textContent = err;
+      hint.className = "field-hint danger";
+      input.focus();
+      return;
+    }
+
+    busy = true;
+    syncEnabled();
+    hint.textContent = "등록하는 중…";
+    hint.className = "field-hint";
+
+    var record = {
+      name: name,
+      photo: newPhotoData ? STORED_MARKER : "",
+      active: true,
+      order: Object.keys(members).length,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
+    var ok = true;
+    // 사진을 먼저 올린다 — 사진 저장이 실패했는데 회원만 등록되면 깨진 카드가 남는다.
+    if (newPhotoData) ok = await putJson(photoPath(name), newPhotoData);
+    if (ok) ok = await putJson(memberPath(name), record);
+
+    busy = false;
+    syncEnabled();
+
+    if (!ok) {
+      hint.textContent = "등록 실패 (네트워크 오류). 다시 시도해주세요.";
+      hint.className = "field-hint danger";
+      return;
+    }
+
+    members[name] = record;
+    if (newPhotoData) photos[name] = newPhotoData;
+    input.value = "";
+    newPhotoData = null;
+    paintDrop($("newPhotoDrop"), $("newPhotoClear"), null);
+    hint.textContent = name + " 님을 등록했어요. 드래프트 페이지 명단에 바로 나타나요.";
+    hint.className = "field-hint good";
+    renderList();
+  }
+
+  // ---------- 수정 ----------
+  async function saveEdit(oldName) {
+    if (!unlocked || busy) return;
+    var note = $("editNote");
+    var newName = $("editNameInput").value.trim();
+    var active = $("editActiveSelect").value === "1";
+
+    var err = validateName(newName, oldName);
+    if (err) {
+      note.textContent = err;
+      note.className = "edit-note danger";
+      return;
+    }
+
+    var renaming = newName !== oldName;
+    if (renaming && !window.confirm(
+      "'" + oldName + "' → '" + newName + "' 으로 이름을 바꿀까요?\n" +
+      "지금까지의 전적·상대전적·드래프트 기록에 남은 이름도 모두 함께 바뀌어요."
+    )) return;
+
+    busy = true;
+    note.textContent = "저장하는 중…";
+    note.className = "edit-note";
+
+    var current = members[oldName] || {};
+    var hadStoredPhoto = current.photo === STORED_MARKER;
+    var photoValue;
+    if (editPhotoData === undefined) photoValue = current.photo || "";
+    else if (editPhotoData === null) photoValue = "";
+    else photoValue = STORED_MARKER;
+
+    var record = {
+      name: newName,
+      photo: photoValue,
+      active: active,
+      order: typeof current.order === "number" ? current.order : Object.keys(members).length,
+      createdAt: current.createdAt || Date.now(),
+      updatedAt: Date.now()
+    };
+
+    var ok = true;
+
+    // 1) 사진 본문 먼저 정리 (새 사진 업로드 / 삭제 / 이름 변경 시 이동)
+    if (editPhotoData) {
+      ok = await putJson(photoPath(newName), editPhotoData);
+      if (ok && renaming && hadStoredPhoto) await deleteJson(photoPath(oldName));
+    } else if (editPhotoData === null) {
+      if (hadStoredPhoto) ok = await deleteJson(photoPath(oldName));
+    } else if (renaming && hadStoredPhoto) {
+      var body = photos[oldName];
+      if (body) {
+        ok = await putJson(photoPath(newName), body);
+        if (ok) await deleteJson(photoPath(oldName));
+      }
+    }
+
+    // 2) 이름이 바뀌면 gachaState 전체에서 이름을 갈아끼운다 (전적/상대전적/드래프트/히스토리)
+    if (ok && renaming) ok = await renameInGachaState(oldName, newName);
+
+    // 3) 회원 레코드 저장
+    if (ok) ok = await putJson(memberPath(newName), record);
+    if (ok && renaming) await deleteJson(memberPath(oldName));
+
+    busy = false;
+
+    if (!ok) {
+      note.textContent = "저장 실패 (네트워크 오류). 다시 시도해주세요.";
+      note.className = "edit-note danger";
+      return;
+    }
+
+    // 로컬 상태 갱신
+    if (renaming) {
+      delete members[oldName];
+      if (photos[oldName]) { photos[newName] = photos[oldName]; delete photos[oldName]; }
+      if (playerStats[oldName]) { playerStats[newName] = playerStats[oldName]; delete playerStats[oldName]; }
+    }
+    if (editPhotoData) photos[newName] = editPhotoData;
+    if (editPhotoData === null) delete photos[newName];
+    members[newName] = record;
+
+    editingName = null;
+    renderList();
+    toast(renaming ? oldName + " → " + newName + " 으로 바꿨어요." : newName + " 님 정보를 저장했어요.");
+  }
+
+  // gachaState 안에 이름이 키/값으로 흩어져 있어서, 한 번 읽어 전부 치환한 뒤 통째로 다시 쓴다.
+  async function renameInGachaState(oldName, newName) {
+    var data = await fetchJson(STATE_PATH);
+    if (!data) return false;
+
+    function renameKey(obj) {
+      if (!obj || !obj[oldName]) return;
+      obj[newName] = obj[oldName];
+      delete obj[oldName];
+    }
+
+    renameKey(data.playerStats);
+
+    if (data.headToHead) {
+      var h2h = data.headToHead;
+      Object.keys(h2h).forEach(function (key) {
+        var rec = h2h[key];
+        if (!rec) return;
+        if (rec.a !== oldName && rec.b !== oldName) return;
+        if (rec.a === oldName) rec.a = newName;
+        if (rec.b === oldName) rec.b = newName;
+        var nextKey = rec.a + "|" + rec.b;
+        if (nextKey !== key) {
+          delete h2h[key];
+          // 같은 상대 쌍이 이미 있으면 합산해서 기록을 잃지 않게 한다.
+          var exist = h2h[nextKey];
+          if (exist) {
+            var sameOrder = exist.a === rec.a;
+            exist.aWin = (exist.aWin || 0) + (sameOrder ? (rec.aWin || 0) : (rec.bWin || 0));
+            exist.bWin = (exist.bWin || 0) + (sameOrder ? (rec.bWin || 0) : (rec.aWin || 0));
+            exist.draw = (exist.draw || 0) + (rec.draw || 0);
+          } else {
+            h2h[nextKey] = rec;
+          }
+        }
+      });
+    }
+
+    function renameInDraft(draft) {
+      if (!draft) return;
+      if (draft.teams) {
+        draft.teams.forEach(function (team) {
+          if (!team || !team.members) return;
+          team.members = team.members.map(function (m) { return m === oldName ? newName : m; });
+        });
+      }
+      if (draft.pairs) {
+        draft.pairs = draft.pairs.map(function (pair) {
+          return pair.map(function (m) { return m === oldName ? newName : m; });
+        });
+      }
+      renameKey(draft.results);
+      if (draft.finalResult && draft.finalResult.pomName === oldName) draft.finalResult.pomName = newName;
+    }
+
+    if (data.drafts) Object.keys(data.drafts).forEach(function (k) { renameInDraft(data.drafts[k]); });
+    if (data.history) Object.keys(data.history).forEach(function (k) { renameInDraft(data.history[k]); });
+    renameInDraft(data.latestDraft);
+
+    return await putJson(STATE_PATH, data);
+  }
+
+  // ---------- 삭제 ----------
+  async function deleteMember(name) {
+    if (!unlocked || busy) return;
+    if (!window.confirm(
+      name + " 님을 회원 목록에서 삭제할까요?\n" +
+      "지난 전적과 드래프트 기록은 그대로 남고, 드래프트 기본 명단에서만 빠져요.\n" +
+      "(기록을 남긴 채 잠시 빼두려면 '숨김'을 쓰는 편이 좋아요.)"
+    )) return;
+
+    var note = $("editNote");
+    busy = true;
+    note.textContent = "삭제하는 중…";
+    note.className = "edit-note";
+
+    var hadStoredPhoto = members[name] && members[name].photo === STORED_MARKER;
+    var ok = await deleteJson(memberPath(name));
+    if (ok && hadStoredPhoto) await deleteJson(photoPath(name));
+
+    busy = false;
+
+    if (!ok) {
+      note.textContent = "삭제 실패 (네트워크 오류).";
+      note.className = "edit-note danger";
+      return;
+    }
+
+    delete members[name];
+    delete photos[name];
+    editingName = null;
+    renderList();
+    toast(name + " 님을 회원 목록에서 삭제했어요.");
+  }
+
+  // ---------- 초기화 ----------
+  bindPhotoDrop($("newPhotoDrop"), $("newPhotoInput"), function (dataUrl) {
+    newPhotoData = dataUrl;
+    paintDrop($("newPhotoDrop"), $("newPhotoClear"), dataUrl);
+  });
+  $("newPhotoClear").addEventListener("click", function (e) {
+    e.preventDefault();
+    newPhotoData = null;
+    paintDrop($("newPhotoDrop"), $("newPhotoClear"), null);
+  });
+  $("createBtn").addEventListener("click", createMember);
+  $("newNameInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") createMember();
+  });
+
+  renderLockPanel();
+  syncEnabled();
+  loadAll();
+})();
+</script>
